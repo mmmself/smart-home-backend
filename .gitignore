@@ -9,3 +9,4 @@ test_data/faces/*
 runs/
 *.onnx
 .venv/
+node_modules/
