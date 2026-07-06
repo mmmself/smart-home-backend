@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/face")
 
 
 @router.post("/enroll")
-async def enroll(
+def enroll(
     person_id: int = Query(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -29,7 +29,7 @@ async def enroll(
     today = datetime.now().strftime("%Y%m%d")
     upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
-    content = await file.read()
+    content = file.file.read()
     ext = validate_upload(file, content)
     filename = f"{uuid.uuid4().hex}{ext}"
     filepath = os.path.join(upload_dir, filename)
@@ -56,7 +56,7 @@ async def enroll(
 
 
 @router.post("/verify")
-async def verify(
+def verify(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
@@ -64,7 +64,7 @@ async def verify(
     today = datetime.now().strftime("%Y%m%d")
     upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
-    content = await file.read()
+    content = file.file.read()
     ext = validate_upload(file, content)
     filename = f"{uuid.uuid4().hex}{ext}"
     filepath = os.path.join(upload_dir, filename)
@@ -75,10 +75,12 @@ async def verify(
     snapshot_url = f"/uploads/{today}/{filename}"
 
     if emb is None:
+        os.remove(filepath)
         return resp(code=1, msg="未检测到人脸")
 
     all_faces = db.query(Face).all()
     if not all_faces:
+        os.remove(filepath)
         return resp(code=1, msg="人脸库为空")
 
     embs, face_ids = _rebuild_matrix()
@@ -98,19 +100,26 @@ async def verify(
                 best_score = score
                 best_face = face
 
+    matched_person = None
+    deny_reason = None
+
     if best_score >= FACE_THRESHOLD and best_face is not None:
-        person = db.query(Person).filter(Person.id == best_face.person_id).first()
+        matched_person = db.query(Person).filter(Person.id == best_face.person_id).first()
+        if matched_person and not matched_person.is_active:
+            deny_reason = "person_inactive"
+
+    if matched_person and matched_person.is_active:
         db.add(OpLog(
             action="door_open",
             target="door01",
-            operator=person.name if person else "face_recognition",
+            operator=matched_person.name,
             detail={"score": best_score, "face_id": best_face.id},
         ))
         db.commit()
         return resp({
             "pass": True,
             "score": best_score,
-            "person": {"id": person.id, "name": person.name} if person else None,
+            "person": {"id": matched_person.id, "name": matched_person.name},
             "snapshot_url": snapshot_url,
         })
     else:
@@ -118,7 +127,7 @@ async def verify(
             action="door_deny",
             target="door01",
             operator="face_recognition",
-            detail={"score": best_score},
+            detail={"score": best_score, "reason": deny_reason or "low_score"},
         ))
         db.commit()
         push_stranger(snapshot_url, best_score)

@@ -3,11 +3,15 @@ import json
 import time
 import math
 import random
+import os
 from datetime import datetime, timezone, timedelta
+from dotenv import load_dotenv
 
-MQTT_BROKER = "broker.emqx.io"
-MQTT_PORT = 1883
-TOPIC_SUFFIX = "sh7k2d"
+load_dotenv()
+
+MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+TOPIC_SUFFIX = os.getenv("TOPIC_SUFFIX", "sh7k2d")
 TZ = timezone(timedelta(hours=8))
 
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)

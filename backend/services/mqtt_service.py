@@ -28,7 +28,7 @@ def on_message(client, userdata, msg):
         ts = payload.get("ts")
 
         from ..database import SessionLocal
-        from ..models import SensorData, Device, OpLog
+        from ..models import SensorData
         db = SessionLocal()
         try:
             sd = SensorData(device_id=device_id, metric=metric, value=value)
@@ -37,23 +37,16 @@ def on_message(client, userdata, msg):
             global _fan_auto_on
             if metric == "temperature" and value > FAN_AUTO_ON_TEMP and not _fan_auto_on:
                 _fan_auto_on = True
-                fan = db.query(Device).filter(Device.device_id == "fan01").first()
-                if not fan:
-                    fan = Device(device_id="fan01", name="风扇", type="fan", state={})
-                    db.add(fan)
-                if fan.state is None:
-                    fan.state = {}
-                fan.state["on"] = True
-                fan.state["auto"] = True
-                db.add(OpLog(
-                    action="fan_auto_on",
-                    target="fan01",
-                    operator="system",
-                    detail={"temperature": value, "reason": "高温自动激活"},
-                ))
+                from .device_service import apply_device_state
+                apply_device_state(db, "fan01", {"on": True, "auto": True},
+                                   action="fan_auto_on", operator="system")
                 logger.info(f"高温联动: 温度{value}°C > {FAN_AUTO_ON_TEMP}°C, 风扇自动开启")
             elif metric == "temperature" and value <= FAN_AUTO_OFF_TEMP and _fan_auto_on:
                 _fan_auto_on = False
+                from .device_service import apply_device_state
+                apply_device_state(db, "fan01", {"on": False, "auto": False},
+                                   action="fan_auto_off", operator="system")
+                logger.info(f"降温联动: 温度{value}°C <= {FAN_AUTO_OFF_TEMP}°C, 风扇自动关闭")
 
             db.commit()
         finally:

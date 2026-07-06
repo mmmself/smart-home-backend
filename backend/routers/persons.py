@@ -4,6 +4,7 @@ from sqlalchemy import func as sqlfunc
 from ..database import get_db
 from ..models import Person, Face
 from ..schemas import PersonIn, PersonOut, PersonUpdate, resp
+from ..services.face_service import remove_embedding_cache
 from ..services.upload import validate_upload
 import os
 import uuid
@@ -81,6 +82,9 @@ def delete_person(person_id: int, db: Session = Depends(get_db)):
     p = db.query(Person).filter(Person.id == person_id).first()
     if not p:
         return resp(code=1, msg="人员不存在")
+    faces = db.query(Face).filter(Face.person_id == person_id).all()
+    for f in faces:
+        remove_embedding_cache(f.id)
     db.delete(p)
     db.commit()
     return resp()

@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Device, OpLog
+from ..services.device_service import apply_device_state
 from ..schemas import resp
-import json
 
 router = APIRouter(prefix="/api")
 
@@ -21,21 +20,8 @@ def activate_scene(name: str, db: Session = Depends(get_db)):
 
     changed = []
     for device_id, state in SCENES[name]:
-        device = db.query(Device).filter(Device.device_id == device_id).first()
-        if not device:
-            device = Device(device_id=device_id, name=device_id, type="unknown", state={})
-            db.add(device)
-        if device.state is None:
-            device.state = {}
-        device.state.update(state)
+        apply_device_state(db, device_id, state,
+                           action=f"scene_{name}", operator="system")
         changed.append(device_id)
-
-    db.add(OpLog(
-        action=f"scene_{name}",
-        target="scene",
-        operator="system",
-        detail={"changed": changed},
-    ))
-    db.commit()
 
     return resp({"scene": name, "changed": changed})

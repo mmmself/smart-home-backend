@@ -3,9 +3,9 @@ from pydantic import BaseModel
 from typing import Any
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Device, OpLog
+from ..models import Device
+from ..services.device_service import apply_device_state
 from ..schemas import resp
-import json
 
 router = APIRouter(prefix="/api")
 
@@ -29,31 +29,10 @@ def list_devices(db: Session = Depends(get_db)):
 
 @router.post("/devices/{device_id}/command")
 def device_command(device_id: str, body: CommandBody, db: Session = Depends(get_db)):
-    device = db.query(Device).filter(Device.device_id == device_id).first()
-    if not device:
-        device = Device(device_id=device_id, name=device_id, type="unknown", state={})
-        db.add(device)
-
-    if device.state is None:
-        device.state = {}
-    device.state.update(body.state)
-    db.add(OpLog(
-        action=f"{body.action}_{device.type}" if device.type else body.action,
-        target=device_id,
-        operator="api",
-        detail=body.state,
-    ))
-    db.commit()
-    db.refresh(device)
-
-    try:
-        from ..services.mqtt_service import mqtt_publish
-        from ..config import TOPIC_SUFFIX
-        mqtt_publish(f"home/{TOPIC_SUFFIX}/cmd/{device_id}", json.dumps(body.state))
-    except Exception as e:
-        import logging
-        logging.getLogger(__name__).warning(f"MQTT publish failed: {e}")
-
+    device = apply_device_state(
+        db, device_id, body.state,
+        action=body.action, operator="api",
+    )
     return resp({
         "device_id": device.device_id,
         "state": device.state,

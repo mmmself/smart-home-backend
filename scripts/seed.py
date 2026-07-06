@@ -11,6 +11,12 @@ from backend import models
 
 TZ = timezone(timedelta(hours=8))
 
+force = "--force" in sys.argv
+if not force:
+    print("seed.py 会清空并重建所有数据！加 --force 确认执行:")
+    print("  python scripts/seed.py --force")
+    sys.exit(1)
+
 Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 

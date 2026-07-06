@@ -12,6 +12,8 @@
 
 ## 快速启动
 
+### 首次初始化
+
 ```bash
 # 1. 启动 MySQL
 docker compose up -d
@@ -19,14 +21,39 @@ docker compose up -d
 # 2. 安装依赖
 pip install -r requirements.txt
 
-# 3. 初始化种子数据 + 启动服务
-python scripts/seed.py && uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+# 3. 下载 AI 模型 (YOLOv8n + InsightFace)
+python scripts/download_models.py
+
+# 4. 初始化种子数据 (会清库！加 --force 确认)
+python scripts/seed.py --force
+
+# 5. 启动后端服务 (必须单 worker)
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 1
 ```
+
+### 日常启动
+
+```bash
+docker compose up -d
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 1
+```
+
+> **⚠️ 必须 `--workers 1`**: embedding 缓存、风扇自动状态、MQTT client 都是进程级状态,多 worker 会导致状态不一致。
 
 或使用一键脚本:
 ```bash
 bash scripts/start.sh   # Linux/Mac
 scripts/start.bat       # Windows
+```
+
+### 摄像头采集 (可选)
+
+```bash
+# 定时拍照 → 目标检测
+python scripts/capture_client.py --mode detect --interval 10
+
+# 单次拍照 → 人脸验证
+python scripts/capture_client.py --mode verify --once
 ```
 
 ## API 一览
@@ -56,11 +83,23 @@ scripts/start.bat       # Windows
 ## 配置
 
 复制 `.env.example` 为 `.env`,按需修改:
-- `DATABASE_URL`: MySQL连接串
-- `MQTT_BROKER`: MQTT broker地址
-- `TOPIC_SUFFIX`: MQTT主题后缀(避免公共broker撞车)
-- `FACE_THRESHOLD`: 人脸识别阈值(默认0.40)
-- `SERVERCHAN_KEY`: Server酱推送key(可选)
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `DATABASE_URL` | - | MySQL连接串 |
+| `MQTT_BROKER` | localhost | MQTT broker地址(部署时用本地mosquitto) |
+| `MQTT_PORT` | 1883 | MQTT端口 |
+| `TOPIC_SUFFIX` | sh7k2d | MQTT主题后缀 |
+| `FACE_THRESHOLD` | 0.40 | 人脸识别阈值 |
+| `FAN_AUTO_ON_TEMP` | 30 | 风扇自动开启温度 |
+| `FAN_AUTO_OFF_TEMP` | 29 | 风扇自动关闭温度 |
+| `LINKAGE_CLASS` | traffic light | YOLO联动目标类别 |
+| `YOLO_MODEL_PATH` | models/yolov8n.pt | YOLO模型路径 |
+| `INSIGHTFACE_ROOT` | models/insightface | InsightFace模型目录 |
+| `INSIGHTFACE_NAME` | buffalo_l | InsightFace模型名称 |
+| `API_KEY` | (空) | API密钥(留空则不鉴权) |
+| `CORS_ORIGINS` | localhost:5173,3000 | 允许的前端来源 |
+| `SERVERCHAN_KEY` | (空) | Server酱推送key(可选) |
 
 ## 目录结构
 
@@ -69,11 +108,12 @@ smart-home-backend/
 ├── docker-compose.yml
 ├── .env.example
 ├── requirements.txt
+├── requirements.lock        # 依赖版本锁定
 ├── backend/
 │   ├── main.py              # FastAPI入口
 │   ├── config.py             # 配置读取
 │   ├── database.py           # 数据库连接
-│   ├── models.py             # 7张表ORM
+│   ├── models.py             # ORM模型
 │   ├── schemas.py            # Pydantic模型
 │   ├── routers/              # API路由
 │   │   ├── persons.py
@@ -84,20 +124,26 @@ smart-home-backend/
 │   │   ├── scene.py
 │   │   └── sensors.py
 │   ├── services/             # 业务服务
+│   │   ├── device_service.py # 统一设备状态+MQTT
 │   │   ├── yolo_service.py
 │   │   ├── face_service.py
 │   │   ├── mqtt_service.py
-│   │   └── notify.py
+│   │   ├── notify.py
+│   │   └── upload.py
 │   └── uploads/
 ├── simulator/
 │   └── device_sim.py         # MQTT设备模拟器
 ├── scripts/
 │   ├── init_db.sql
-│   ├── seed.py               # 种子数据
+│   ├── seed.py               # 种子数据(--force确认)
+│   ├── download_models.py    # 模型离线下载
+│   ├── capture_client.py     # 摄像头采集客户端
 │   ├── torch_check.py
 │   ├── test_face.py
 │   └── start.sh / start.bat
-└── models/                   # 模型文件(yolov8n.pt等)
+└── models/                   # 模型文件
+    ├── yolov8n.pt
+    └── insightface/          # download_models.py 下载
 ```
 
 ## 评审演示话术
@@ -112,7 +158,8 @@ smart-home-backend/
 1. 启动后端服务
 2. 运行 `python simulator/device_sim.py` 启动传感器模拟器
 3. 约1分钟后温度达到30°C,触发风扇自动开启
-4. 查看 GET /api/logs?action=fan_auto_on 可看到联动日志
+4. 温度回落后风扇自动关闭
+5. 查看 GET /api/logs?action=fan_auto_on / fan_auto_off 可看到联动日志
 
 ### 场景模式
 1. POST /api/scene/home → 开灯、开空调26°C
@@ -121,7 +168,6 @@ smart-home-backend/
 
 ## 已知坑
 
-- YOLOv8n模型首次加载需下载~6MB,请保持网络通畅
-- InsightFace buffalo_l 模型首次运行需下载~300MB
-- 公共MQTT broker (broker.emqx.io) 可能撞车,修改 `.env` 中的 `TOPIC_SUFFIX` 即可
-- `.env` 和 `models/*.pt` 已在 `.gitignore` 中排除
+- InsightFace buffalo_l 模型需 `python scripts/download_models.py` 下载(~300MB)
+- 部署到 ARM 板时 `requirements.lock` 需重新生成(aarch64 wheel 不同)
+- 公共 MQTT broker 仅用于开发,部署时请用本地 mosquitto

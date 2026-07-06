@@ -9,3 +9,4 @@ runs/
 *.onnx
 .venv/
 node_modules/
+models/insightface/

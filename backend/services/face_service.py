@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 
+from ..config import INSIGHTFACE_ROOT, INSIGHTFACE_NAME
+
 _app = None
 _embedding_cache = {}
 
@@ -38,7 +40,9 @@ def _get_app():
     global _app
     if _app is None:
         from insightface.app import FaceAnalysis
-        _app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+        import os
+        root = INSIGHTFACE_ROOT if os.path.isdir(INSIGHTFACE_ROOT) else None
+        _app = FaceAnalysis(name=INSIGHTFACE_NAME, root=root, providers=["CPUExecutionProvider"])
         _app.prepare(ctx_id=-1, det_size=(640, 640))
     return _app
 

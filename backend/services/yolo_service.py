@@ -2,17 +2,18 @@ from ultralytics import YOLO
 import cv2
 import os
 
+from ..config import YOLO_MODEL_PATH
+
 _yolo_model = None
 
 
 def _get_model():
     global _yolo_model
     if _yolo_model is None:
-        model_path = os.path.join("models", "yolov8n.pt")
-        if not os.path.exists(model_path):
-            _yolo_model = YOLO("yolov8n.pt")
+        if os.path.exists(YOLO_MODEL_PATH):
+            _yolo_model = YOLO(YOLO_MODEL_PATH)
         else:
-            _yolo_model = YOLO(model_path)
+            _yolo_model = YOLO("yolov8n.pt")
     return _yolo_model
 
 
