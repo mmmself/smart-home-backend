@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Detection, OpLog
 from ..services.yolo_service import detect as yolo_detect
+from ..services.upload import validate_upload
 from ..schemas import resp
-from ..config import TOPIC_SUFFIX
 import os
 import uuid
 from datetime import datetime
@@ -21,10 +21,10 @@ async def detect_image(
     backend_dir = os.path.dirname(os.path.dirname(__file__))
     upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
-    ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
+    content = await file.read()
+    ext = validate_upload(file, content)
     filename = f"{uuid.uuid4().hex}{ext}"
     filepath = os.path.join(upload_dir, filename)
-    content = await file.read()
     with open(filepath, "wb") as f:
         f.write(content)
 

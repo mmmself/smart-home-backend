@@ -1,6 +1,8 @@
 from sqlalchemy import (Column, Integer, String, Float, Boolean, DateTime,
                         ForeignKey, JSON, LargeBinary, Index, Text)
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.ext.mutable import MutableDict
 from .database import Base
 
 
@@ -15,11 +17,13 @@ class Person(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+    faces = relationship("Face", backref="person", cascade="all, delete-orphan")
+
 
 class Face(Base):
     __tablename__ = "faces"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    person_id = Column(Integer, ForeignKey("persons.id", ondelete="CASCADE"))
+    person_id = Column(Integer, ForeignKey("persons.id", ondelete="CASCADE"), index=True)
     image_path = Column(String(255))
     embedding = Column(LargeBinary)
     created_at = Column(DateTime, server_default=func.now())
@@ -41,7 +45,7 @@ class Device(Base):
     device_id = Column(String(32), unique=True)
     name = Column(String(64))
     type = Column(String(16))
-    state = Column(JSON)
+    state = Column(MutableDict.as_mutable(JSON))
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
@@ -51,7 +55,7 @@ class OpLog(Base):
     action = Column(String(32))
     target = Column(String(32))
     operator = Column(String(64))
-    detail = Column(JSON)
+    detail = Column(MutableDict.as_mutable(JSON))
     ts = Column(DateTime, server_default=func.now())
     __table_args__ = (Index("idx_ts", "ts"),)
 

@@ -33,10 +33,15 @@ def sensors_history(
     db: Session = Depends(get_db),
 ):
     bucket_seconds = 300
-    if interval.endswith("m"):
-        bucket_seconds = int(interval[:-1]) * 60
-    elif interval.endswith("h"):
-        bucket_seconds = int(interval[:-1]) * 3600
+    try:
+        if interval.endswith("m"):
+            bucket_seconds = int(interval[:-1]) * 60
+        elif interval.endswith("h"):
+            bucket_seconds = int(interval[:-1]) * 3600
+        elif interval.isdigit():
+            bucket_seconds = int(interval)
+    except (ValueError, IndexError):
+        bucket_seconds = 300
 
     group_expr = f"FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/{bucket_seconds})*{bucket_seconds})"
     cols = f"{group_expr} as bucket, AVG(value) as avg, MAX(value) as max, MIN(value) as min"
@@ -63,8 +68,8 @@ def sensors_history(
     rows = q.all()
 
     result = [{"ts": r.bucket.isoformat() if hasattr(r.bucket, 'isoformat') else str(r.bucket),
-               "avg": round(float(r.avg), 2) if r.avg else None,
-               "max": round(float(r.max), 2) if r.max else None,
-               "min": round(float(r.min), 2) if r.min else None}
+               "avg": round(float(r.avg), 2) if r.avg is not None else None,
+               "max": round(float(r.max), 2) if r.max is not None else None,
+               "min": round(float(r.min), 2) if r.min is not None else None}
               for r in rows]
     return resp(result)

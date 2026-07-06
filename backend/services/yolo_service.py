@@ -10,8 +10,9 @@ def _get_model():
     if _yolo_model is None:
         model_path = os.path.join("models", "yolov8n.pt")
         if not os.path.exists(model_path):
-            os.makedirs("models", exist_ok=True)
-        _yolo_model = YOLO(model_path)
+            _yolo_model = YOLO("yolov8n.pt")
+        else:
+            _yolo_model = YOLO(model_path)
     return _yolo_model
 
 

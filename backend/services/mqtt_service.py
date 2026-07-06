@@ -2,7 +2,7 @@ import paho.mqtt.client as mqtt
 import json
 import logging
 import threading
-from ..config import MQTT_BROKER, MQTT_PORT, TOPIC_SUFFIX
+from ..config import MQTT_BROKER, MQTT_PORT, TOPIC_SUFFIX, FAN_AUTO_ON_TEMP, FAN_AUTO_OFF_TEMP
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ def on_message(client, userdata, msg):
             db.add(sd)
 
             global _fan_auto_on
-            if metric == "temperature" and value > 30 and not _fan_auto_on:
+            if metric == "temperature" and value > FAN_AUTO_ON_TEMP and not _fan_auto_on:
                 _fan_auto_on = True
                 fan = db.query(Device).filter(Device.device_id == "fan01").first()
                 if not fan:
@@ -51,8 +51,8 @@ def on_message(client, userdata, msg):
                     operator="system",
                     detail={"temperature": value, "reason": "高温自动激活"},
                 ))
-                logger.info(f"高温联动: 温度{value}°C > 30°C, 风扇自动开启")
-            elif metric == "temperature" and value <= 29 and _fan_auto_on:
+                logger.info(f"高温联动: 温度{value}°C > {FAN_AUTO_ON_TEMP}°C, 风扇自动开启")
+            elif metric == "temperature" and value <= FAN_AUTO_OFF_TEMP and _fan_auto_on:
                 _fan_auto_on = False
 
             db.commit()
@@ -69,7 +69,18 @@ def mqtt_publish(topic: str, payload: str):
 
 
 def start_mqtt():
-    global _client
+    global _client, _fan_auto_on
+    try:
+        from ..database import SessionLocal
+        from ..models import Device
+        db = SessionLocal()
+        fan = db.query(Device).filter(Device.device_id == "fan01").first()
+        if fan and isinstance(fan.state, dict):
+            _fan_auto_on = bool(fan.state.get("auto", False))
+            logger.info(f"风扇自动状态从数据库恢复: {_fan_auto_on}")
+        db.close()
+    except Exception as e:
+        logger.warning(f"恢复风扇自动状态失败: {e}")
     _client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     _client.on_connect = on_connect
     _client.on_message = on_message

@@ -4,11 +4,9 @@ from sqlalchemy import and_, desc
 from ..database import get_db
 from ..models import OpLog
 from ..schemas import resp
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 
 router = APIRouter(prefix="/api")
-
-TZ = timezone(timedelta(hours=8))
 
 
 @router.get("/logs")

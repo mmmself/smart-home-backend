@@ -2,6 +2,36 @@ import numpy as np
 import cv2
 
 _app = None
+_embedding_cache = {}
+
+
+def _load_embedding_cache():
+    global _embedding_cache
+    try:
+        from ..database import SessionLocal
+        from ..models import Face
+        db = SessionLocal()
+        rows = db.query(Face).all()
+        _embedding_cache = {r.id: np.frombuffer(r.embedding, dtype=np.float32) for r in rows}
+        db.close()
+    except Exception:
+        pass
+
+
+def _rebuild_matrix():
+    if not _embedding_cache:
+        return None, []
+    face_ids = list(_embedding_cache.keys())
+    embs = np.vstack([_embedding_cache[fid] for fid in face_ids])
+    return embs, face_ids
+
+
+def add_embedding_cache(face_id: int, emb: np.ndarray):
+    _embedding_cache[face_id] = emb.copy()
+
+
+def remove_embedding_cache(face_id: int):
+    _embedding_cache.pop(face_id, None)
 
 
 def _get_app():

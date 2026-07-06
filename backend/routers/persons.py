@@ -4,6 +4,7 @@ from sqlalchemy import func as sqlfunc
 from ..database import get_db
 from ..models import Person, Face
 from ..schemas import PersonIn, PersonOut, PersonUpdate, resp
+from ..services.upload import validate_upload
 import os
 import uuid
 from datetime import datetime
@@ -25,10 +26,19 @@ def list_persons(
     items = q.order_by(Person.id.desc()).offset((page - 1) * size).limit(size).all()
 
     result = []
+    item_ids = [p.id for p in items]
+    if item_ids:
+        face_counts = dict(
+            db.query(Face.person_id, sqlfunc.count(Face.id))
+            .filter(Face.person_id.in_(item_ids))
+            .group_by(Face.person_id)
+            .all()
+        )
+    else:
+        face_counts = {}
     for p in items:
-        face_count = db.query(sqlfunc.count(Face.id)).filter(Face.person_id == p.id).scalar()
         po = PersonOut.model_validate(p)
-        po.face_count = face_count or 0
+        po.face_count = face_counts.get(p.id, 0)
         result.append(po)
 
     return resp({"total": total, "items": result})
@@ -82,10 +92,10 @@ async def upload_file(file: UploadFile = File(...)):
     backend_dir = os.path.dirname(os.path.dirname(__file__))
     upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
-    ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
+    content = await file.read()
+    ext = validate_upload(file, content)
     filename = f"{uuid.uuid4().hex}{ext}"
     filepath = os.path.join(upload_dir, filename)
-    content = await file.read()
     with open(filepath, "wb") as f:
         f.write(content)
     url = f"/uploads/{today}/{filename}"

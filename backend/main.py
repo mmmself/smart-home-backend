@@ -1,17 +1,36 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
 from .database import engine, Base
 from . import models
 from .routers import persons, detect, face, devices, logs, scene, sensors
 import os
+import logging
 
-app = FastAPI(title="Smart Home Backend")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    try:
+        from .services.mqtt_service import start_mqtt
+        start_mqtt()
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"MQTT startup failed: {e}")
+    try:
+        from .services.face_service import _load_embedding_cache
+        _load_embedding_cache()
+        logging.getLogger(__name__).info("人脸embedding缓存加载完成")
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"人脸embedding缓存加载失败: {e}")
+    yield
+
+
+app = FastAPI(title="Smart Home Backend", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -27,17 +46,6 @@ app.include_router(devices.router)
 app.include_router(logs.router)
 app.include_router(scene.router)
 app.include_router(sensors.router)
-
-
-@app.on_event("startup")
-def on_startup():
-    Base.metadata.create_all(bind=engine)
-    try:
-        from .services.mqtt_service import start_mqtt
-        start_mqtt()
-    except Exception as e:
-        import logging
-        logging.getLogger(__name__).warning(f"MQTT startup failed: {e}")
 
 
 @app.get("/")

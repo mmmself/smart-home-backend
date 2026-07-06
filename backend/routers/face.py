@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Person, Face, OpLog
-from ..services.face_service import get_embedding, cosine
+from ..services.face_service import get_embedding, add_embedding_cache, remove_embedding_cache, _rebuild_matrix
 from ..services.notify import push_stranger
+from ..services.upload import validate_upload
 from ..schemas import resp
 from ..config import FACE_THRESHOLD
 import os
@@ -28,10 +29,10 @@ async def enroll(
     today = datetime.now().strftime("%Y%m%d")
     upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
-    ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
+    content = await file.read()
+    ext = validate_upload(file, content)
     filename = f"{uuid.uuid4().hex}{ext}"
     filepath = os.path.join(upload_dir, filename)
-    content = await file.read()
     with open(filepath, "wb") as f:
         f.write(content)
 
@@ -49,6 +50,7 @@ async def enroll(
     db.add(face)
     db.commit()
     db.refresh(face)
+    add_embedding_cache(face.id, emb)
 
     return resp({"face_id": face.id, "image_url": image_url})
 
@@ -62,10 +64,10 @@ async def verify(
     today = datetime.now().strftime("%Y%m%d")
     upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
-    ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
+    content = await file.read()
+    ext = validate_upload(file, content)
     filename = f"{uuid.uuid4().hex}{ext}"
     filepath = os.path.join(upload_dir, filename)
-    content = await file.read()
     with open(filepath, "wb") as f:
         f.write(content)
 
@@ -76,15 +78,25 @@ async def verify(
         return resp(code=1, msg="未检测到人脸")
 
     all_faces = db.query(Face).all()
-    best_score = -1.0
-    best_face = None
+    if not all_faces:
+        return resp(code=1, msg="人脸库为空")
 
-    for face in all_faces:
-        stored_emb = np.frombuffer(face.embedding, dtype=np.float32)
-        score = cosine(emb, stored_emb)
-        if score > best_score:
-            best_score = score
-            best_face = face
+    embs, face_ids = _rebuild_matrix()
+    if embs is not None and len(face_ids) > 0:
+        scores = embs @ emb
+        best_idx = int(np.argmax(scores))
+        best_score = float(scores[best_idx])
+        face_id_map = {f.id: f for f in all_faces}
+        best_face = face_id_map.get(face_ids[best_idx])
+    else:
+        best_score = -1.0
+        best_face = None
+        for face in all_faces:
+            stored_emb = np.frombuffer(face.embedding, dtype=np.float32)
+            score = float(np.dot(emb, stored_emb))
+            if score > best_score:
+                best_score = score
+                best_face = face
 
     if best_score >= FACE_THRESHOLD and best_face is not None:
         person = db.query(Person).filter(Person.id == best_face.person_id).first()
@@ -139,4 +151,5 @@ def delete_face(face_id: int, db: Session = Depends(get_db)):
         return resp(code=1, msg="人脸记录不存在")
     db.delete(face)
     db.commit()
+    remove_embedding_cache(face_id)
     return resp()
