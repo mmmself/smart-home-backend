@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:#0d1015; }
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-thumb{ background:#2a3442; border-radius:9px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  input[type=range]{ accent-color:#f2a950; }
+  @keyframes scanline{ 0%{ transform:translateY(0); } 100%{ transform:translateY(240px); } }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @keyframes fanSpin{ to{ transform:rotate(360deg); } }
+  @keyframes slideIn{ from{ opacity:0; transform:translateY(-10px); } to{ opacity:1; transform:translateY(0); } }
+  @keyframes denyFlash{ 0%,100%{ opacity:0; } 25%,60%{ opacity:.55; } }
+  @keyframes toastIn{ from{ opacity:0; transform:translateX(24px); } to{ opacity:1; transform:translateX(0); } }
+  @keyframes shimmer{ 0%{ background-position:-320px 0; } 100%{ background-position:320px 0; } }
+  @keyframes doorL{ to{ transform:translateX(-100%); } }
+  @keyframes doorR{ to{ transform:translateX(100%); } }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:.01ms !important; } }
+</style>
+</helmet>
+
+<div style="display:flex; min-height:100vh; background:#0d1015; color:#e9e6df; font-family:'Noto Sans SC',system-ui,sans-serif; font-size:14px;">
+
+  <!-- ============ LEFT NAV RAIL ============ -->
+  <aside style="width:222px; flex:0 0 222px; background:#12171f; border-right:1px solid #1e2530; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;">
+    <div style="padding:22px 20px 18px; display:flex; align-items:center; gap:11px;">
+      <div style="width:34px; height:34px; border-radius:10px; background:linear-gradient(145deg,#f2a950,#c47a2c); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(242,169,80,.35);">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:700; font-size:14.5px; letter-spacing:.3px;">智享家</div>
+        <div style="font-size:10.5px; color:#6b7686; letter-spacing:.5px;">SMART HOME OS</div>
+      </div>
+    </div>
+
+    <nav style="display:flex; flex-direction:column; gap:3px; padding:8px 12px;">
+      <a onClick="{{ goDashboard }}" style="{{ navSt.dashboard }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>监控大屏</span>
+      </a>
+      <a onClick="{{ goFace }}" style="{{ navSt.face }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="11" r="3.2"/><path d="M7.5 17c.9-1.7 2.6-2.4 4.5-2.4s3.6.7 4.5 2.4"/></svg>
+        <span>人脸门禁</span>
+      </a>
+      <a onClick="{{ goDetect }}" style="{{ navSt.detect }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        <span>物体识别</span>
+      </a>
+      <a onClick="{{ goHistory }}" style="{{ navSt.history }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/></svg>
+        <span>历史数据</span>
+      </a>
+      <a onClick="{{ goPersons }}" style="{{ navSt.persons }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.6-3 2.9-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18.5 19c-.3-1.9-1.3-3.2-2.7-3.9"/></svg>
+        <span>人员管理</span>
+      </a>
+      <a onClick="{{ goLogs }}" style="{{ navSt.logs }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5h11M8 12h11M8 19h11"/><circle cx="4" cy="5" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="4" cy="19" r="1.2"/></svg>
+        <span>操作日志</span>
+      </a>
+    </nav>
+
+    <div style="margin-top:auto; padding:16px 20px; border-top:1px solid #1e2530; display:flex; align-items:center; gap:10px;">
+      <span style="width:8px; height:8px; border-radius:50%; background:{{ connDot }}; box-shadow:0 0 8px {{ connDot }};"></span>
+      <div style="font-size:11.5px; color:#8b95a3;">{{ connText }}</div>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main style="flex:1; min-width:0; display:flex; flex-direction:column;">
+
+    <!-- top bar -->
+    <header style="height:64px; flex:0 0 64px; border-bottom:1px solid #1a2029; display:flex; align-items:center; justify-content:space-between; padding:0 26px; background:rgba(13,16,21,.7); backdrop-filter:blur(8px); position:sticky; top:0; z-index:20;">
+      <div style="display:flex; align-items:baseline; gap:14px;">
+        <h1 style="margin:0; font-size:17px; font-weight:700;">{{ pageTitle }}</h1>
+        <span style="font-size:12px; color:#6b7686;">{{ pageSub }}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:20px;">
+        <div style="text-align:right;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:500; letter-spacing:.5px; font-variant-numeric:tabular-nums;">{{ clock }}</div>
+          <div style="font-size:11px; color:#6b7686; font-variant-numeric:tabular-nums;">{{ dateStr }}</div>
+        </div>
+        <div style="display:flex; gap:6px; background:#151b24; border:1px solid #232c39; border-radius:11px; padding:4px;">
+          <button onClick="{{ sceneAway }}" style="{{ sceneBtn.away }}">离家</button>
+          <button onClick="{{ sceneHome }}" style="{{ sceneBtn.home }}">回家</button>
+          <button onClick="{{ sceneNight }}" style="{{ sceneBtn.night }}">睡眠</button>
+        </div>
+      </div>
+    </header>
+
+    <div style="flex:1; min-height:0; overflow:auto; padding:22px 26px 34px;">
+
+      <!-- ============ DASHBOARD ============ -->
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid; grid-template-columns:308px minmax(0,1fr) 348px; gap:18px; align-items:start; max-width:1560px; margin:0 auto;">
+
+        <!-- LEFT COLUMN -->
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <!-- sensor cards -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+            <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:15px 16px 12px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:12px; color:#98a2b0;">室内温度</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f2a950" stroke-width="1.9" stroke-linecap="round"><path d="M12 3a2 2 0 0 1 2 2v8.3a4 4 0 1 1-4 0V5a2 2 0 0 1 2-2Z"/></svg>
+              </div>
+              <div style="display:flex; align-items:flex-end; gap:3px; margin-top:6px;">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:33px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; color:{{ tempColor }};">{{ tempVal }}</span>
+                <span style="font-size:14px; color:#98a2b0; margin-bottom:3px;">°C</span>
+              </div>
+              <svg viewBox="0 0 120 34" preserveAspectRatio="none" style="width:100%; height:30px; margin-top:8px; display:block;"><polyline points="{{ tempSpark }}" fill="none" stroke="#f2a950" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:15px 16px 12px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:12px; color:#98a2b0;">室内湿度</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5b8def" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.4 6 11a6 6 0 1 1-12 0c0-4.6 6-11 6-11Z"/></svg>
+              </div>
+              <div style="display:flex; align-items:flex-end; gap:3px; margin-top:6px;">
+                <span style="font-family:'JetBrains Mono',monospace; font-size:33px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; color:#e9e6df;">{{ humVal }}</span>
+                <span style="font-size:14px; color:#98a2b0; margin-bottom:3px;">%</span>
+              </div>
+              <svg viewBox="0 0 120 34" preserveAspectRatio="none" style="width:100%; height:30px; margin-top:8px; display:block;"><polyline points="{{ humSpark }}" fill="none" stroke="#5b8def" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+
+          <!-- device control cards -->
+          <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.28); display:flex; flex-direction:column; gap:13px;">
+            <div style="font-size:12.5px; font-weight:700; color:#b9c1cd; letter-spacing:.3px;">设备控制</div>
+
+            <!-- light -->
+            <div style="border:1px solid #222b37; border-radius:13px; padding:12px 13px; background:#141a23;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                  <span style="width:30px; height:30px; border-radius:9px; background:{{ lightIconBg }}; display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ lightIconStroke }}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 12 3Z"/></svg></span>
+                  <div><div style="font-weight:500;">客厅灯</div><div style="font-size:11px; color:#6b7686; font-variant-numeric:tabular-nums;">亮度 {{ lightBrightness }}%</div></div>
+                </div>
+                <div onClick="{{ toggleLight }}" style="{{ swLight }}"><span style="{{ swLightKnob }}"></span></div>
+              </div>
+              <input type="range" min="0" max="100" value="{{ lightBrightness }}" onInput="{{ onLightDrag }}" onChange="{{ onLightCommit }}" style="width:100%; margin-top:11px; height:4px;"/>
+            </div>
+
+            <!-- ac -->
+            <div style="border:1px solid #222b37; border-radius:13px; padding:12px 13px; background:#141a23; display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:9px;">
+                <span style="width:30px; height:30px; border-radius:9px; background:{{ acIconBg }}; display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ acIconStroke }}" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="7" rx="2"/><path d="M6 16c0 1.5 1 2 2 2M11 16c0 2-1.3 3-2.5 3M17 16c0 1.5-1 2-2 2"/></svg></span>
+                <div><div style="font-weight:500;">空调</div><div style="font-size:11px; color:#6b7686;">{{ acStateText }}</div></div>
+              </div>
+              <div style="display:flex; align-items:center; gap:9px;">
+                <div style="display:flex; align-items:center; gap:2px; background:#1c232e; border:1px solid #2a3442; border-radius:9px; padding:2px;">
+                  <button onClick="{{ acDown }}" style="width:24px; height:24px; border:none; background:transparent; color:#b9c1cd; font-size:16px; cursor:pointer; border-radius:7px;">−</button>
+                  <span style="font-family:'JetBrains Mono',monospace; font-size:13px; width:36px; text-align:center; font-variant-numeric:tabular-nums;">{{ acTemp }}°</span>
+                  <button onClick="{{ acUp }}" style="width:24px; height:24px; border:none; background:transparent; color:#b9c1cd; font-size:15px; cursor:pointer; border-radius:7px;">+</button>
+                </div>
+                <div onClick="{{ toggleAc }}" style="{{ swAc }}"><span style="{{ swAcKnob }}"></span></div>
+              </div>
+            </div>
+
+            <!-- fan -->
+            <div style="border:1px solid #222b37; border-radius:13px; padding:12px 13px; background:#141a23; display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:9px;">
+                <span style="width:30px; height:30px; border-radius:9px; background:{{ fanIconBg }}; display:flex; align-items:center; justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ fanIconStroke }}" stroke-width="1.7" style="{{ fanSpinStyle }}"><circle cx="12" cy="12" r="2"/><path d="M12 10c0-4 .5-6 2-6s2.5 3 1 5M14 12c4 0 6 .5 6 2s-3 2.5-5 1M12 14c0 4-.5 6-2 6s-2.5-3-1-5M10 12c-4 0-6-.5-6-2s3-2.5 5-1"/></svg></span>
+                <div style="display:flex; align-items:center; gap:7px;"><div style="font-weight:500;">风扇</div><sc-if value="{{ fanAuto }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px; color:#f2a950; border:1px solid #6a4e26; background:#2a2113; padding:1px 6px; border-radius:6px;">自动</span></sc-if></div>
+              </div>
+              <div onClick="{{ toggleFan }}" style="{{ swFan }}"><span style="{{ swFanKnob }}"></span></div>
+            </div>
+
+            <!-- door + window read only -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:11px;">
+              <div style="border:1px solid #222b37; border-radius:13px; padding:11px 12px; background:#141a23;">
+                <div style="display:flex; align-items:center; gap:8px;"><span style="width:26px; height:26px; border-radius:8px; background:#182a22; display:flex; align-items:center; justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#46b98a" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="3" width="12" height="18" rx="1"/><circle cx="14.5" cy="12" r="1"/></svg></span><div style="font-weight:500;">入户门</div></div>
+                <div style="margin-top:8px; display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:#46b98a;"></span><span style="font-size:12px; color:#b9c1cd;">{{ doorStateText }}</span></div>
+                <div style="font-size:11px; color:#6b7686; margin-top:5px; font-variant-numeric:tabular-nums;">最近 {{ doorLastName }} · {{ doorLastTime }}</div>
+              </div>
+              <div style="border:1px solid #222b37; border-radius:13px; padding:11px 12px; background:#141a23;">
+                <div style="display:flex; align-items:center; gap:8px;"><span style="width:26px; height:26px; border-radius:8px; background:#1c232e; display:flex; align-items:center; justify-content:center;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#98a2b0" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M12 4v16M4 12h16"/></svg></span><div style="font-weight:500;">卧室窗</div></div>
+                <div style="margin-top:8px; display:flex; align-items:center; gap:6px;"><span style="width:7px; height:7px; border-radius:50%; background:{{ windowDot }};"></span><span style="font-size:12px; color:#b9c1cd;">{{ windowStateText }}</span></div>
+                <div style="font-size:11px; color:#6b7686; margin-top:5px;">只读状态</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER COLUMN -->
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <!-- floor plan -->
+          <div style="background:radial-gradient(120% 90% at 40% 30%,#171e27,#0f141b); border:1px solid #232c39; border-radius:18px; padding:16px 18px; box-shadow:0 14px 40px rgba(0,0,0,.35); position:relative;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <div style="font-size:12.5px; font-weight:700; color:#b9c1cd;">户型总览</div>
+              <div style="font-size:11px; color:#6b7686;">{{ sceneLabel }} · 实时联动</div>
+            </div>
+            <div style="position:relative; width:100%;">
+              <svg viewBox="0 0 640 400" style="width:100%; height:auto; display:block;">
+                <defs>
+                  <radialGradient id="lightGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffcf7a" stop-opacity="0.9"/><stop offset="45%" stop-color="#f2a950" stop-opacity="0.4"/><stop offset="100%" stop-color="#f2a950" stop-opacity="0"/></radialGradient>
+                </defs>
+                <!-- glow (behind) -->
+                <circle cx="205" cy="200" r="{{ glowR }}" fill="url(#lightGlow)" opacity="{{ glowOpacity }}" style="transition:opacity .5s ease, r .5s ease;"/>
+                <!-- outer + rooms wireframe -->
+                <rect x="24" y="24" width="592" height="352" rx="8" fill="none" stroke="#3a4757" stroke-width="2"/>
+                <line x1="392" y1="24" x2="392" y2="376" stroke="#2c3542" stroke-width="1.5"/>
+                <line x1="392" y1="210" x2="616" y2="210" stroke="#2c3542" stroke-width="1.5"/>
+                <!-- door opening on outer wall (entrance) -->
+                <line x1="616" y1="300" x2="616" y2="352" stroke="#0f141b" stroke-width="4"/>
+                <!-- zone labels -->
+                <text x="44" y="48" fill="#5b6675" font-size="13" font-family="Noto Sans SC">客厅</text>
+                <text x="410" y="48" fill="#5b6675" font-size="13" font-family="Noto Sans SC">卧室</text>
+                <text x="410" y="234" fill="#5b6675" font-size="13" font-family="Noto Sans SC">门口 · 玄关</text>
+                <!-- deny flash overlay on entrance -->
+                <rect x="393" y="211" width="222" height="164" fill="#e5544b" opacity="0" style="{{ denyFlashStyle }}"/>
+
+                <!-- device nodes -->
+                <!-- light -->
+                <g>
+                  <circle cx="205" cy="200" r="18" fill="#141a23" stroke="{{ lightRing }}" stroke-width="2"/>
+                  <path d="M205 191a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 205 191Z" fill="none" stroke="{{ lightRing }}" stroke-width="1.6"/>
+                  <text x="205" y="234" fill="#8b95a3" font-size="11" text-anchor="middle" font-family="Noto Sans SC">客厅灯</text>
+                </g>
+                <!-- ac -->
+                <g>
+                  <rect x="86" y="86" width="46" height="20" rx="5" fill="#141a23" stroke="{{ acRing }}" stroke-width="2"/>
+                  <path d="M96 100c0 1 .7 1.4 1.4 1.4M104 100c0 1.4-.9 2-1.7 2M112 100c0 1-.7 1.4-1.4 1.4" stroke="{{ acRing }}" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+                  <text x="109" y="122" fill="#8b95a3" font-size="11" text-anchor="middle" font-family="Noto Sans SC">空调</text>
+                </g>
+                <!-- fan -->
+                <g>
+                  <circle cx="300" cy="312" r="17" fill="#141a23" stroke="{{ fanRing }}" stroke-width="2"/>
+                  <g style="{{ fanSpinPlan }}" transform-origin="300px 312px"><path d="M300 312c0-6 .8-9 3-9s3.5 4.5 1.5 7.5M302 312c6 0 9 .8 9 3s-4.5 3.5-7.5 1.5" stroke="{{ fanRing }}" stroke-width="1.5" fill="none" stroke-linecap="round"/></g>
+                  <text x="300" y="346" fill="#8b95a3" font-size="11" text-anchor="middle" font-family="Noto Sans SC">风扇</text>
+                </g>
+                <!-- window -->
+                <g>
+                  <rect x="486" y="30" width="30" height="22" rx="3" fill="#141a23" stroke="{{ windowRing }}" stroke-width="2"/>
+                  <path d="M501 30v22M486 41h30" stroke="{{ windowRing }}" stroke-width="1.2"/>
+                  <text x="501" y="70" fill="#8b95a3" font-size="11" text-anchor="middle" font-family="Noto Sans SC">卧室窗</text>
+                </g>
+                <!-- door -->
+                <g>
+                  <rect x="582" y="300" width="18" height="52" rx="2" fill="#141a23" stroke="{{ doorRing }}" stroke-width="2"/>
+                  <circle cx="586" cy="326" r="1.6" fill="{{ doorRing }}"/>
+                  <text x="560" y="292" fill="#8b95a3" font-size="11" text-anchor="middle" font-family="Noto Sans SC">入户门</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 24h chart -->
+          <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:16px 18px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+              <div style="font-size:12.5px; font-weight:700; color:#b9c1cd;">24 小时温湿度趋势</div>
+              <div style="display:flex; gap:14px;">
+                <span onClick="{{ toggleTempLegend }}" style="{{ legendTemp }}"><span style="width:10px; height:2.5px; background:#f2a950; border-radius:2px;"></span>温度 °C</span>
+                <span onClick="{{ toggleHumLegend }}" style="{{ legendHum }}"><span style="width:10px; height:2.5px; background:#5b8def; border-radius:2px;"></span>湿度 %</span>
+              </div>
+            </div>
+            <sc-if value="{{ hasChart }}" hint-placeholder-val="{{ true }}">
+            <svg viewBox="0 0 600 200" style="width:100%; height:auto; display:block;">
+              <line x1="8" y1="150" x2="592" y2="150" stroke="#232c39" stroke-width="1"/>
+              <line x1="8" y1="100" x2="592" y2="100" stroke="#1c2531" stroke-width="1" stroke-dasharray="3 4"/>
+              <line x1="8" y1="50" x2="592" y2="50" stroke="#1c2531" stroke-width="1" stroke-dasharray="3 4"/>
+              <sc-if value="{{ legend.temp }}" hint-placeholder-val="{{ true }}"><polyline points="{{ chartTemp }}" fill="none" stroke="#f2a950" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></sc-if>
+              <sc-if value="{{ legend.hum }}" hint-placeholder-val="{{ true }}"><polyline points="{{ chartHum }}" fill="none" stroke="#5b8def" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></sc-if>
+            </svg>
+            <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:10.5px; color:#6b7686; font-variant-numeric:tabular-nums;"><span>{{ chartT0 }}</span><span>{{ chartT1 }}</span><span>{{ chartT2 }}</span><span>现在</span></div>
+            </sc-if>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <!-- event stream -->
+          <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.28); display:flex; flex-direction:column; max-height:452px;">
+            <div style="padding:14px 16px 10px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #1e2732;">
+              <div style="font-size:12.5px; font-weight:700; color:#b9c1cd;">实时事件流</div>
+              <span style="display:flex; align-items:center; gap:5px; font-size:10.5px; color:#6b7686;"><span style="width:6px; height:6px; border-radius:50%; background:#46b98a; box-shadow:0 0 6px #46b98a;"></span>5s 轮询</span>
+            </div>
+            <div style="overflow-y:auto; padding:8px;">
+              <sc-for list="{{ eventsView }}" as="ev" hint-placeholder-count="4">
+                <div style="{{ ev.rowStyle }}">
+                  <sc-if value="{{ ev.hasSnap }}" hint-placeholder-val="{{ false }}">
+                    <div onClick="{{ ev.openSnap }}" style="width:38px; height:38px; border-radius:8px; flex:0 0 38px; background:{{ ev.snapBg }}; border:1px solid {{ ev.snapBorder }}; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden;">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{ ev.snapIcon }}" stroke-width="1.6"><circle cx="12" cy="9" r="3.4"/><path d="M5.5 20c.9-3 3.4-4.5 6.5-4.5s5.6 1.5 6.5 4.5"/></svg>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ ev.hasDot }}" hint-placeholder-val="{{ true }}">
+                    <span style="width:8px; height:8px; border-radius:50%; flex:0 0 8px; margin-top:5px; background:{{ ev.dot }};"></span>
+                  </sc-if>
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:12.5px; color:{{ ev.textColor }}; font-weight:{{ ev.weight }};">{{ ev.text }}</div>
+                    <div style="font-size:10.5px; color:#6b7686; margin-top:2px; font-variant-numeric:tabular-nums;">{{ ev.timeText }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- latest yolo -->
+          <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:14px 16px 16px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+            <div style="font-size:12.5px; font-weight:700; color:#b9c1cd; margin-bottom:10px;">最近一次识别标注</div>
+            <div onClick="{{ openYolo }}" style="position:relative; border-radius:12px; overflow:hidden; cursor:pointer; aspect-ratio:16/10; background:linear-gradient(135deg,#1e2732,#151b23); border:1px solid #2a3442; display:flex; align-items:center; justify-content:center;">
+              <svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#3a4757" stroke-width="1.2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.6 4-5.2 7-5.2s5.8 1.6 7 5.2"/></svg>
+              <div style="position:absolute; left:22%; top:14%; width:34%; height:70%; border:2px solid #46b98a; border-radius:4px;"><span style="position:absolute; top:-19px; left:-1px; background:#46b98a; color:#08130d; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px 4px 4px 0;">人 0.92</span></div>
+              <div style="position:absolute; right:10px; bottom:10px; font-size:10.5px; color:#8b95a3; background:rgba(13,16,21,.7); padding:2px 8px; border-radius:6px;">点击放大</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      </sc-if>
+
+      <!-- placeholder routes (filled next) -->
+      <sc-if value="{{ isFace }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1120px; margin:0 auto;">
+        <div style="display:flex; gap:8px; margin-bottom:22px;">
+          <div onClick="{{ goVerifyTab }}" style="{{ faceTabVerifyStyle }}">门禁验证</div>
+          <div onClick="{{ goLibTab }}" style="{{ faceTabLibStyle }}">人脸库管理</div>
+        </div>
+
+        <!-- ===== Tab 1: verify ===== -->
+        <sc-if value="{{ faceIsVerify }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:22px; align-items:start;">
+          <!-- big stage -->
+          <div style="background:#181f29; border:1px solid #232c39; border-radius:18px; padding:28px; box-shadow:0 14px 40px rgba(0,0,0,.3); min-height:430px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+
+            <sc-if value="{{ faceIdle }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ faceRunUpload }}" style="width:100%; max-width:520px; height:300px; border:2px dashed #33404f; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; cursor:pointer; background:radial-gradient(80% 80% at 50% 40%,rgba(242,169,80,.05),transparent);">
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#f2a950" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5"/><path d="M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+              <div style="font-size:15px; color:#c4ccd6;">拖拽 / 点击上传照片，支持 Ctrl+V 粘贴</div>
+              <div style="font-size:12px; color:#6b7686;">JPG / PNG，建议正面清晰照</div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px; align-items:center;">
+              <span style="font-size:12px; color:#6b7686;">现场演示：</span>
+              <button onClick="{{ faceDemoPass }}" style="padding:7px 14px; border-radius:9px; border:1px solid #2f6b4f; background:#16281f; color:#7fd6ab; cursor:pointer; font-size:12.5px; font-family:inherit;">模拟通过</button>
+              <button onClick="{{ faceDemoDeny }}" style="padding:7px 14px; border-radius:9px; border:1px solid #6b2f2c; background:#281615; color:#f4a9a4; cursor:pointer; font-size:12.5px; font-family:inherit;">模拟拒绝</button>
+              <button onClick="{{ faceDemoNoface }}" style="padding:7px 14px; border-radius:9px; border:1px solid #3a4757; background:#1c232e; color:#98a2b0; cursor:pointer; font-size:12.5px; font-family:inherit;">无人脸</button>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ faceScanning }}" hint-placeholder-val="{{ false }}">
+            <div style="width:260px; height:300px; border-radius:16px; position:relative; overflow:hidden; background:linear-gradient(135deg,#2a3442,#141a23); border:1px solid #3a4757;">
+              <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1" style="position:absolute; left:50%; top:44%; transform:translate(-50%,-50%);"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.6 4-5.2 7-5.2s5.8 1.6 7 5.2"/></svg>
+              <div style="position:absolute; left:0; right:0; top:0; height:2px; background:linear-gradient(90deg,transparent,#f2a950,transparent); box-shadow:0 0 12px #f2a950; animation:scanline 1.4s ease-in-out infinite alternate;"></div>
+              <div style="position:absolute; left:10px; top:10px; width:22px; height:22px; border-left:2px solid #f2a950; border-top:2px solid #f2a950;"></div>
+              <div style="position:absolute; right:10px; top:10px; width:22px; height:22px; border-right:2px solid #f2a950; border-top:2px solid #f2a950;"></div>
+              <div style="position:absolute; left:10px; bottom:10px; width:22px; height:22px; border-left:2px solid #f2a950; border-bottom:2px solid #f2a950;"></div>
+              <div style="position:absolute; right:10px; bottom:10px; width:22px; height:22px; border-right:2px solid #f2a950; border-bottom:2px solid #f2a950;"></div>
+            </div>
+            <div style="margin-top:20px; font-size:15px; color:#f2a950; display:flex; align-items:center; gap:10px;"><span style="width:16px; height:16px; border:2px solid #f2a950; border-top-color:transparent; border-radius:50%; animation:spin .7s linear infinite; display:inline-block;"></span>识别中…</div>
+            </sc-if>
+
+            <sc-if value="{{ facePass }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:18px;">
+              <div style="position:relative; width:220px; height:130px; border-radius:12px; overflow:hidden; background:#0f141b; border:1px solid #2f6b4f;">
+                <div style="position:absolute; left:0; top:0; bottom:0; width:50%; background:linear-gradient(135deg,#243a2e,#16241c); border-right:1px solid #2f6b4f; animation:doorL 1.4s cubic-bezier(.7,0,.3,1) forwards;"></div>
+                <div style="position:absolute; right:0; top:0; bottom:0; width:50%; background:linear-gradient(225deg,#243a2e,#16241c); border-left:1px solid #2f6b4f; animation:doorR 1.4s cubic-bezier(.7,0,.3,1) forwards;"></div>
+                <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#46b98a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11V8a5 5 0 0 1 9.9-1"/><rect x="5" y="11" width="14" height="9" rx="2"/></svg></div>
+              </div>
+              <div style="text-align:center;">
+                <div style="display:flex; align-items:center; gap:12px; justify-content:center;">
+                  <span style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg,#5a4a2f,#2a2113); display:flex; align-items:center; justify-content:center; border:2px solid #46b98a;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.4"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c.9-3 3.4-4.5 6.5-4.5s5.6 1.5 6.5 4.5"/></svg></span>
+                  <div style="text-align:left;">
+                    <div style="font-size:20px; font-weight:700; color:#8ce0b8;">欢迎回家，{{ faceName }}</div>
+                    <div style="font-size:12.5px; color:#98a2b0; margin-top:2px;">相似度 <span style="font-family:'JetBrains Mono',monospace; color:#f2a950; font-variant-numeric:tabular-nums;">{{ faceScore }}</span> · 门已开启</div>
+                  </div>
+                </div>
+              </div>
+              <button onClick="{{ faceReset }}" style="padding:8px 18px; border-radius:9px; border:1px solid #2a3442; background:#1c232e; color:#b9c1cd; cursor:pointer; font-size:13px; font-family:inherit;">再验证一次</button>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ faceDeny }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:16px; max-width:420px;">
+              <div style="width:100%; background:rgba(229,84,75,.10); border:1px solid rgba(229,84,75,.4); border-radius:14px; padding:20px; display:flex; gap:16px; align-items:center;">
+                <div onClick="{{ faceOpenSnap }}" style="width:64px; height:64px; flex:0 0 64px; border-radius:10px; background:linear-gradient(135deg,#3a1c1a,#1a1210); border:1px solid #6b2f2c; display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#e5544b" stroke-width="1.5"><circle cx="12" cy="9" r="3.4"/><path d="M5.5 20c.9-3 3.4-4.5 6.5-4.5s5.6 1.5 6.5 4.5"/></svg></div>
+                <div>
+                  <div style="display:flex; align-items:center; gap:8px; font-size:17px; font-weight:700; color:#f4a9a4;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e5544b" stroke-width="2"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>未授权人员，已拒绝开门</div>
+                  <div style="font-size:12.5px; color:#c49a97; margin-top:6px;">相似度 <span style="font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums;">0.21</span> 低于阈值 0.75</div>
+                  <div style="font-size:12.5px; color:#98a2b0; margin-top:6px; display:flex; align-items:center; gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#46b98a" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>已推送告警至户主微信</div>
+                </div>
+              </div>
+              <button onClick="{{ faceReset }}" style="padding:8px 18px; border-radius:9px; border:1px solid #2a3442; background:#1c232e; color:#b9c1cd; cursor:pointer; font-size:13px; font-family:inherit;">重新验证</button>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ faceNoface }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+              <div style="width:72px; height:72px; border-radius:50%; background:#1c232e; display:flex; align-items:center; justify-content:center; border:1px solid #3a4757;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#98a2b0" stroke-width="1.5"><circle cx="12" cy="9" r="3.4"/><path d="M5.5 20c.9-3 3.4-4.5 6.5-4.5s5.6 1.5 6.5 4.5"/><path d="M4 4l16 16" stroke="#e5544b"/></svg></div>
+              <div style="font-size:15px; color:#c4ccd6;">未检测到人脸，请换一张正面照片</div>
+              <button onClick="{{ faceReset }}" style="padding:8px 18px; border-radius:9px; border:1px solid #2a3442; background:#1c232e; color:#b9c1cd; cursor:pointer; font-size:13px; font-family:inherit;">重新上传</button>
+            </div>
+            </sc-if>
+          </div>
+
+          <!-- recent 5 -->
+          <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+            <div style="font-size:12.5px; font-weight:700; color:#b9c1cd; margin-bottom:12px;">最近 5 次验证</div>
+            <div style="display:flex; flex-direction:column; gap:9px;">
+              <sc-for list="{{ faceHistoryView }}" as="h" hint-placeholder-count="5">
+                <div style="display:flex; align-items:center; gap:11px; padding:8px; border-radius:10px; background:#141a23; border:1px solid #222b37;">
+                  <div style="width:40px; height:40px; border-radius:9px; flex:0 0 40px; background:{{ h.tone }}; display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.4"><circle cx="12" cy="9" r="3.2"/><path d="M6 20c.8-2.7 3.2-4 6-4s5.2 1.3 6 4"/></svg></div>
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:13px; font-weight:500; color:{{ h.dot }};">{{ h.label }}</div>
+                    <div style="font-size:11px; color:#6b7686; font-variant-numeric:tabular-nums;">相似度 {{ h.score }} · {{ h.time }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== Tab 2: library ===== -->
+        <sc-if value="{{ faceIsLib }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <sc-for list="{{ faceLibView }}" as="g" hint-placeholder-count="3">
+            <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:16px 18px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+                <span style="width:40px; height:40px; border-radius:50%; background:{{ g.tone }}; display:flex; align-items:center; justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.4"><circle cx="12" cy="9" r="3.2"/><path d="M6 20c.8-2.7 3.2-4 6-4s5.2 1.3 6 4"/></svg></span>
+                <div style="font-size:15px; font-weight:700;">{{ g.name }}</div>
+                <span style="{{ g.roleStyle }}">{{ g.roleText }}</span>
+                <span style="font-size:12px; color:#6b7686;">已录入 {{ g.count }} 张特征</span>
+              </div>
+              <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <sc-for list="{{ g.photos }}" as="p" hint-placeholder-count="3">
+                  <div style="position:relative; width:96px; height:120px; border-radius:11px; overflow:hidden; background:linear-gradient(135deg,#2a3442,#141a23); border:1px solid #2a3442; display:flex; align-items:center; justify-content:center;" onMouseEnter="" >
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1.2"><circle cx="12" cy="9" r="3.4"/><path d="M5.5 20c.9-3 3.4-4.5 6.5-4.5s5.6 1.5 6.5 4.5"/></svg>
+                    <button onClick="{{ p.del }}" title="删除" style="position:absolute; top:6px; right:6px; width:24px; height:24px; border-radius:7px; border:none; background:rgba(229,84,75,.85); color:#fff; cursor:pointer; font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center;">×</button>
+                  </div>
+                </sc-for>
+                <div onClick="{{ g.addPhoto }}" style="width:96px; height:120px; border-radius:11px; border:2px dashed #33404f; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer; color:#6b7686;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6b7686" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  <span style="font-size:11px;">追加照片</span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isDetect }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1160px; margin:0 auto; display:flex; flex-direction:column; gap:20px;">
+        <!-- upload / infer bar -->
+        <sc-if value="{{ detectIdle }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ runDetect }}" style="border:2px dashed #33404f; border-radius:16px; padding:44px; display:flex; flex-direction:column; align-items:center; gap:12px; cursor:pointer; background:radial-gradient(70% 70% at 50% 30%,rgba(91,141,239,.05),transparent);">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#5b8def" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <div style="font-size:15px; color:#c4ccd6;">点击上传图片进行物体识别（YOLO）</div>
+          <div style="font-size:12px; color:#6b7686;">取消选择则运行一次示例推理</div>
+        </div>
+        <div style="display:flex; justify-content:center; margin-top:12px;">
+          <div onClick="{{ toggleLinkage }}" style="display:inline-flex; align-items:center; gap:9px; padding:8px 14px; border-radius:10px; background:#141a23; border:1px solid #232c39; cursor:pointer;">
+            <span style="{{ linkageSw }}"><span style="{{ linkageKnob }}"></span></span>
+            <span style="font-size:12.5px; color:#c4ccd6;">检出后联动控灯 <span style="color:#6b7686;">?linkage=1</span></span>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ detectInfer }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+          <div style="aspect-ratio:16/10; border-radius:14px; background:linear-gradient(100deg,#1a212b,#232c39,#1a212b); background-size:320px 100%; animation:shimmer 1.2s linear infinite; border:1px solid #232c39;"></div>
+          <div style="aspect-ratio:16/10; border-radius:14px; background:linear-gradient(100deg,#1a212b,#232c39,#1a212b); background-size:320px 100%; animation:shimmer 1.2s linear infinite; border:1px solid #232c39; display:flex; align-items:center; justify-content:center;"><div style="font-size:14px; color:#5b8def; display:flex; align-items:center; gap:10px;"><span style="width:16px; height:16px; border:2px solid #5b8def; border-top-color:transparent; border-radius:50%; animation:spin .7s linear infinite;"></span>推理中…</div></div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ detectDone }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; justify-content:flex-end;">
+          <button onClick="{{ detectReset }}" style="padding:8px 16px; border-radius:9px; border:1px solid #2a3442; background:#1c232e; color:#b9c1cd; cursor:pointer; font-size:13px; font-family:inherit; display:flex; align-items:center; gap:7px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 16V5M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>上传新图</button>
+        </div>
+        <!-- compare -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+          <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+            <div style="font-size:12px; color:#98a2b0; margin-bottom:9px; display:flex; justify-content:space-between;"><span>原图</span><span style="color:#6b7686;">点击放大</span></div>
+            <div onClick="{{ detectOpenOrig }}" style="position:relative; aspect-ratio:16/10; border-radius:11px; overflow:hidden; cursor:zoom-in; background:linear-gradient(135deg,{{ detectTone1 }},{{ detectTone2 }}); display:flex; align-items:center; justify-content:center;">
+              {{ detectOrigImg }}
+              <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-4 4 3 3-2 4 3"/></svg></div>
+          </div>
+          <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:14px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+            <div style="font-size:12px; color:#98a2b0; margin-bottom:9px; display:flex; justify-content:space-between;"><span>标注图 · 检出 {{ detectCount }} 个目标</span><span style="color:#6b7686;">点击放大</span></div>
+            <div onClick="{{ detectOpenAnno }}" style="position:relative; aspect-ratio:16/10; border-radius:11px; overflow:hidden; cursor:zoom-in; background:linear-gradient(135deg,{{ detectTone1 }},{{ detectTone2 }});">
+              {{ detectAnnoImg }}
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="1"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-4 4 3 3-2 4 3"/></svg></div>
+              <sc-for list="{{ detectBoxes }}" as="b" hint-placeholder-count="3">
+                <div style="{{ b.boxStyle }}"><span style="{{ b.tagStyle }}">{{ b.label }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <!-- result table -->
+        <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:16px 18px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+          <div style="font-size:12.5px; font-weight:700; color:#b9c1cd; margin-bottom:12px;">识别结果 · {{ detectCount }} 项</div>
+          <div style="display:grid; grid-template-columns:140px 1fr 220px; gap:12px; font-size:11.5px; color:#6b7686; padding:0 4px 8px; border-bottom:1px solid #232c39;"><span>类别</span><span>置信度</span><span>框坐标 [x1,y1,x2,y2]</span></div>
+          <sc-for list="{{ detectRows }}" as="r" hint-placeholder-count="4">
+            <div style="display:grid; grid-template-columns:140px 1fr 220px; gap:12px; align-items:center; padding:11px 4px; border-bottom:1px solid #1c2531;">
+              <span style="display:flex; align-items:center; gap:8px; font-size:13px;"><span style="width:9px; height:9px; border-radius:2px; background:{{ r.color }};"></span>{{ r.cls }} <span style="color:#6b7686; font-size:11px;">{{ r.en }}</span></span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="flex:1; height:6px; background:#232c39; border-radius:4px; overflow:hidden;"><span style="display:block; {{ r.barStyle }}"></span></span><span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#c4ccd6; font-variant-numeric:tabular-nums; width:38px;">{{ r.confText }}</span></span>
+              <span style="font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#8b95a3; font-variant-numeric:tabular-nums;">{{ r.box }}</span>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <!-- history strip -->
+        <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:14px 16px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+          <div style="font-size:12.5px; font-weight:700; color:#b9c1cd; margin-bottom:11px;">历史识别</div>
+          <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:6px;">
+            <sc-for list="{{ detectHistoryView }}" as="h" hint-placeholder-count="3">
+              <div onClick="{{ h.view }}" style="position:relative; flex:0 0 150px; width:150px; aspect-ratio:16/10; border-radius:10px; overflow:hidden; cursor:pointer; background:linear-gradient(135deg,#1e2732,#151b23); border:1px solid #2a3442;">
+                <sc-for list="{{ h.firstBoxes }}" as="fb" hint-placeholder-count="2"><div style="{{ fb.style }}"></div></sc-for>
+                <div style="position:absolute; right:6px; bottom:6px; font-size:10px; color:#c4ccd6; background:rgba(13,16,21,.7); padding:1px 7px; border-radius:6px;">{{ h.count }} 目标</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1120px; margin:0 auto; display:flex; flex-direction:column; gap:18px;">
+        <!-- filter bar -->
+        <div style="background:#181f29; border:1px solid #232c39; border-radius:14px; padding:14px 16px; display:flex; flex-wrap:wrap; align-items:center; gap:18px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+          <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:12px; color:#6b7686;">指标</span>
+            <div onClick="{{ setMetricTemp }}" style="{{ hMetricTemp }}">温度</div>
+            <div onClick="{{ setMetricHum }}" style="{{ hMetricHum }}">湿度</div>
+            <div onClick="{{ setMetricBri }}" style="{{ hMetricBri }}">亮度</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:12px; color:#6b7686;">时间</span>
+            <div onClick="{{ rangeToday.on }}" style="{{ rangeToday.style }}">今天</div>
+            <div onClick="{{ range24h.on }}" style="{{ range24h.style }}">近 24h</div>
+            <div onClick="{{ range7d.on }}" style="{{ range7d.style }}">近 7 天</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:12px; color:#6b7686;">粒度</span>
+            <div onClick="{{ int5m.on }}" style="{{ int5m.style }}">5 分钟</div>
+            <div onClick="{{ int1h.on }}" style="{{ int1h.style }}">1 小时</div>
+          </div>
+          <button onClick="{{ runHistoryQuery }}" style="margin-left:auto; padding:8px 20px; border-radius:9px; border:none; background:#f2a950; color:#1a1206; cursor:pointer; font-size:13px; font-weight:500; font-family:inherit; white-space:nowrap;">查询</button>
+        </div>
+
+        <!-- summary + chart -->
+        <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+          <div style="display:flex; align-items:center; gap:24px; margin-bottom:16px;">
+            <div style="font-size:13px; font-weight:700; color:#b9c1cd;">{{ hMetricLabel }}趋势</div>
+            <div style="display:flex; gap:26px;">
+              <div><div style="font-size:11px; color:#6b7686;">均值</div><div style="font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:700; color:{{ hColor }}; font-variant-numeric:tabular-nums;">{{ hMean }}</div></div>
+              <div><div style="font-size:11px; color:#6b7686;">最高</div><div style="font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:700; color:#e5544b; font-variant-numeric:tabular-nums;">{{ hMax }}</div></div>
+              <div><div style="font-size:11px; color:#6b7686;">最低</div><div style="font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:700; color:#5b8def; font-variant-numeric:tabular-nums;">{{ hMin }}</div></div>
+            </div>
+          </div>
+          <svg viewBox="0 0 760 210" style="width:100%; height:auto; display:block;">
+            <line x1="10" y1="182" x2="750" y2="182" stroke="#232c39" stroke-width="1"/>
+            <line x1="10" y1="120" x2="750" y2="120" stroke="#1c2531" stroke-width="1" stroke-dasharray="3 4"/>
+            <line x1="10" y1="58" x2="750" y2="58" stroke="#1c2531" stroke-width="1" stroke-dasharray="3 4"/>
+            <polygon points="{{ hBand }}" fill="{{ hColor }}" opacity="0.12"/>
+            <polyline points="{{ hAvgLine }}" fill="none" stroke="{{ hColor }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <sc-for list="{{ hTicks }}" as="t" hint-placeholder-count="4"><text x="{{ t.x }}" y="200" fill="#6b7686" font-size="10" text-anchor="middle" font-family="JetBrains Mono">{{ t.label }}</text></sc-for>
+          </svg>
+          <!-- dataZoom -->
+          <div style="margin-top:6px;">
+            <div style="position:relative; height:44px; background:#141a23; border:1px solid #232c39; border-radius:9px; overflow:hidden;">
+              <svg viewBox="0 0 760 40" preserveAspectRatio="none" style="width:100%; height:100%; display:block;"><polyline points="{{ hOverview }}" fill="none" stroke="#3a4757" stroke-width="1.5"/></svg>
+            </div>
+            <div style="display:flex; align-items:center; gap:14px; margin-top:8px;">
+              <span style="font-size:11px; color:#6b7686; white-space:nowrap;">区域缩放</span>
+              <input type="range" min="0" max="95" value="{{ hZoomS }}" onInput="{{ onZoomS }}" style="flex:1; height:4px;"/>
+              <input type="range" min="5" max="100" value="{{ hZoomE }}" onInput="{{ onZoomE }}" style="flex:1; height:4px;"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- state changes -->
+        <div style="background:#181f29; border:1px solid #232c39; border-radius:16px; padding:16px 18px; box-shadow:0 10px 30px rgba(0,0,0,.28);">
+          <div style="font-size:12.5px; font-weight:700; color:#b9c1cd; margin-bottom:12px;">状态变化</div>
+          <div style="display:grid; grid-template-columns:130px 120px 1fr 1fr; gap:12px; font-size:11.5px; color:#6b7686; padding:0 4px 8px; border-bottom:1px solid #232c39;"><span>时间</span><span>设备</span><span>变化</span><span>触发者</span></div>
+          <sc-for list="{{ hChanges }}" as="c" hint-placeholder-count="6">
+            <div style="display:grid; grid-template-columns:130px 120px 1fr 1fr; gap:12px; align-items:center; padding:11px 4px; border-bottom:1px solid #1c2531; font-size:13px;">
+              <span style="font-family:'JetBrains Mono',monospace; color:#8b95a3; font-variant-numeric:tabular-nums;">{{ c.date }} {{ c.time }}</span>
+              <span style="display:flex; align-items:center; gap:7px;"><span style="width:8px; height:8px; border-radius:2px; background:{{ c.tone }};"></span>{{ c.device }}</span>
+              <span style="color:#c4ccd6;">{{ c.change }}</span>
+              <span style="color:#98a2b0;">{{ c.trigger }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isPersons }}" hint-placeholder-val="{{ false }}"><div id="route-persons" style="color:#6b7686; padding:60px; text-align:center;">人员管理 — 建设中</div></sc-if>
+      <sc-if value="{{ isLogs }}" hint-placeholder-val="{{ false }}"><div id="route-logs" style="color:#6b7686; padding:60px; text-align:center;">操作日志 — 建设中</div></sc-if>
+
+    </div>
+  </main>
+
+  <!-- toasts -->
+  <div style="position:fixed; top:74px; right:22px; z-index:80; display:flex; flex-direction:column; gap:10px;">
+    <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+      <div style="{{ t.style }}">
+        <span style="width:8px; height:8px; border-radius:50%; flex:0 0 8px; background:{{ t.dot }};"></span>
+        <span style="flex:1; font-size:13px;">{{ t.msg }}</span>
+        <sc-if value="{{ t.closable }}" hint-placeholder-val="{{ false }}"><button onClick="{{ t.close }}" style="background:none; border:none; color:#98a2b0; cursor:pointer; font-size:15px; line-height:1;">×</button></sc-if>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- confirm dialog -->
+  <sc-if value="{{ hasConfirm }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed; inset:0; z-index:90; background:rgba(6,8,11,.6); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center;">
+    <div style="width:380px; background:#181f29; border:1px solid #2a3442; border-radius:16px; padding:22px; box-shadow:0 24px 60px rgba(0,0,0,.5);">
+      <div style="font-size:15px; font-weight:700; margin-bottom:8px;">{{ confirm.title }}</div>
+      <div style="font-size:13px; color:#98a2b0; line-height:1.6;">{{ confirm.text }}</div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+        <button onClick="{{ confirmCancel }}" style="padding:8px 16px; border-radius:9px; border:1px solid #2a3442; background:#1c232e; color:#b9c1cd; cursor:pointer; font-size:13px;">取消</button>
+        <button onClick="{{ confirmOk }}" style="padding:8px 16px; border-radius:9px; border:none; background:{{ confirm.okBg }}; color:#fff; cursor:pointer; font-size:13px; font-weight:500;">{{ confirm.okText }}</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- lightbox -->
+  <sc-if value="{{ hasLightbox }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeLightbox }}" style="position:fixed; inset:0; z-index:95; background:rgba(6,8,11,.82); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:40px; cursor:zoom-out;">
+    <div style="max-width:70vw; max-height:80vh; background:#141a23; border:1px solid #2a3442; border-radius:16px; overflow:hidden;">
+      <div style="width:520px; height:360px; background:linear-gradient(135deg,{{ lightbox.c1 }},{{ lightbox.c2 }}); display:flex; align-items:center; justify-content:center; position:relative;">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.6 4-5.2 7-5.2s5.8 1.6 7 5.2"/></svg>
+        <div style="position:absolute; left:16px; bottom:14px; font-size:12px; color:rgba(255,255,255,.7); background:rgba(0,0,0,.4); padding:4px 10px; border-radius:7px;">{{ lightbox.caption }}</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    const now = new Date();
+    this.state = {
+      route: 'dashboard',
+      now,
+      scene: 'home',
+      sensors: null,
+      buf: this._seedBuf(now),
+      devices: this._seedDevices(now),
+      events: this._seedEvents(now),
+      toasts: [],
+      confirm: null,
+      lightbox: null,
+      lightDraft: null,
+      denyAt: 0,
+      legend: { temp:true, hum:true },
+      // face
+      faceTab: 'verify',
+      faceState: 'idle',
+      faceResult: null,
+      faceHistory: this._seedFaceHistory(now),
+      faceLib: this._seedFaceLib(),
+      // detect
+      detectState: 'done',
+      detectResult: this._detectScene(0),
+      detectHistory: this._seedDetectHistory(),
+      // history
+      hMetric:'temperature', hRange:'24h', hInterval:'1h', hNonce:1, hZoomS:0, hZoomE:100, hQueried:true,
+      // backend connectivity: null=unknown, true=live, false=demo/offline
+      online: null,
+      detectLinkage: true,
+    };
+    this._uid = 100;
+    this._evPool = 0;
+  }
+
+  _seedFaceHistory(now){
+    const t=(m)=>new Date(now.getTime()-m*60000).toISOString();
+    return [
+      { id:1, pass:true, name:'张三', score:0.87, ts:t(6), tone:'#2f6b4f' },
+      { id:2, pass:false, score:0.21, ts:t(23), tone:'#6b2f2c' },
+      { id:3, pass:true, name:'李四', score:0.91, ts:t(41), tone:'#2f5a6b' },
+      { id:4, pass:true, name:'王芳', score:0.89, ts:t(88), tone:'#5a4a2f' },
+      { id:5, pass:false, score:0.18, ts:t(140), tone:'#6b2f2c' },
+    ];
+  }
+  _seedFaceLib(){
+    return [
+      { id:1, name:'张三', role:'owner', tone:'#5a4a2f', count:3 },
+      { id:2, name:'李四', role:'family', tone:'#2f5a6b', count:2 },
+      { id:3, name:'王芳', role:'family', tone:'#4a2f5a', count:3 },
+    ];
+  }
+
+  // ---------- history ----------
+  _histMeta(){ return {
+    temperature:{label:'温度',unit:'°C',color:'#f2a950',base:27,amp:5,noise:0.8},
+    humidity:{label:'湿度',unit:'%',color:'#5b8def',base:56,amp:-8,noise:2.2},
+    brightness:{label:'亮度',unit:'%',color:'#8fce6a',base:50,amp:-38,noise:6},
+  }; }
+  _histGen(metric,range,interval,nonce){
+    const meta=this._histMeta()[metric];
+    const now=new Date();
+    let spanH = range==='7d'?168 : 24;
+    let stepMin = interval==='5m'?30 : 60; // 5m coarsened to 30m for perf
+    if(range==='7d') stepMin=120;
+    const n=Math.round(spanH*60/stepMin);
+    const pts=[];
+    const rnd=(k)=>{ const x=Math.sin((k+1)*12.9898+nonce*4.1)*43758.5453; return (x-Math.floor(x)); };
+    for(let i=n;i>=0;i--){
+      const t=new Date(now.getTime()-i*stepMin*60000);
+      const h=t.getHours()+t.getMinutes()/60;
+      const avg=meta.base+meta.amp*Math.sin(2*Math.PI*(h-15)/24)+(rnd(i)-0.5)*meta.noise*1.4;
+      const spread=meta.noise*(0.6+rnd(i+7)*0.8);
+      pts.push({ ts:t.toISOString(), avg:+avg.toFixed(1), max:+(avg+spread).toFixed(1), min:+(avg-spread).toFixed(1) });
+    }
+    return { pts, meta };
+  }
+  _histStateChanges(){
+    const now=new Date(); const t=(m)=>new Date(now.getTime()-m*60000).toISOString();
+    return [
+      { ts:t(18), device:'入户门', change:'关闭 → 开启', trigger:'人脸识别（张三）', tone:'#46b98a' },
+      { ts:t(42), device:'客厅灯', change:'关闭 → 开启', trigger:'手动', tone:'#f2a950' },
+      { ts:t(96), device:'卧室窗', change:'关闭 → 开启', trigger:'场景（回家）', tone:'#5b8def' },
+      { ts:t(150), device:'风扇', change:'关闭 → 开启', trigger:'自动（室温 31.2°C）', tone:'#5bd0e0' },
+      { ts:t(230), device:'客厅灯', change:'开启 → 关闭', trigger:'场景（离家）', tone:'#98a2b0' },
+      { ts:t(320), device:'入户门', change:'开启 → 关闭', trigger:'自动落锁', tone:'#98a2b0' },
+    ];
+  }
+  // GET /api/sensors/history — pulls avg/max/min series; falls back to the local generator
+  runHistoryQuery(){
+    const S=this.state;
+    const end=new Date();
+    const spanH = S.hRange==='7d'?168:24;
+    const start=new Date(end.getTime()-spanH*3600*1000);
+    this.apiSensorHistory(S.hMetric, start.toISOString(), end.toISOString(), S.hInterval).then(rows=>{
+      this._setOnline(true);
+      this.setState(s=>({ hNonce:s.hNonce+1, hQueried:true, hZoomS:0, hZoomE:100, hLiveRows: Array.isArray(rows)&&rows.length?rows:null }));
+      this.toast('success','查询完成');
+    }).catch(()=>{
+      this._setOnline(false);
+      this.setState(s=>({ hNonce:s.hNonce+1, hQueried:true, hZoomS:0, hZoomE:100, hLiveRows:null }));
+      this.toast('success','查询完成（演示数据）');
+    });
+  }
+
+  // ---------- detect ----------
+  _clsMap(){ return {person:'人',car:'车',cat:'猫',dog:'狗',chair:'椅子',laptop:'笔记本',tv:'电视',bottle:'瓶子',sofa:'沙发',cup:'杯子',bicycle:'自行车',potted_plant:'盆栽'}; }
+  _clsColor(cls){ return {person:'#46b98a',car:'#5b8def',cat:'#f2a950',dog:'#e08a4b',chair:'#a98bd6',laptop:'#5bd0e0',tv:'#d67ba0',bottle:'#8fce6a',sofa:'#d6b06a',cup:'#6ac9c9',bicycle:'#c98b6a',potted_plant:'#7fce8a'}[cls]||'#98a2b0'; }
+  _detectScene(i){
+    const scenes=[
+      { image_url:'/uploads/20260706/livingroom.jpg', annotated_url:'/uploads/20260706/livingroom_out.jpg', tone:['#2a3442','#141a23'],
+        detections:[ {cls:'person',conf:0.92,box:[34,50,220,290]}, {cls:'sofa',conf:0.81,box:[210,150,460,300]}, {cls:'laptop',conf:0.74,box:[120,190,210,250]}, {cls:'cup',conf:0.63,box:[250,120,300,175]} ] },
+      { image_url:'/uploads/20260706/gate.jpg', annotated_url:'/uploads/20260706/gate_out.jpg', tone:['#2a2f3a','#14181f'],
+        detections:[ {cls:'car',conf:0.95,box:[60,120,400,280]}, {cls:'person',conf:0.88,box:[410,90,470,270]}, {cls:'dog',conf:0.71,box:[300,220,380,295]} ] },
+      { image_url:'/uploads/20260706/bedroom.jpg', annotated_url:'/uploads/20260706/bedroom_out.jpg', tone:['#332a3a','#181420'],
+        detections:[ {cls:'cat',conf:0.9,box:[150,120,300,280]}, {cls:'potted_plant',conf:0.77,box:[380,60,450,250]}, {cls:'tv',conf:0.85,box:[40,70,180,190]} ] },
+    ];
+    return { ...scenes[i%scenes.length], w:480, h:300, ts:new Date().toISOString() };
+  }
+  _seedDetectHistory(){
+    return [ {...this._detectScene(0), id:1}, {...this._detectScene(1), id:2}, {...this._detectScene(2), id:3} ];
+  }
+  // POST /api/detect (multipart, optional ?linkage=1). Real upload when a file is picked; else simulated.
+  runDetect(){
+    if(this.state.detectState==='infer') return;
+    this._pickFile('image/*').then(file=>{
+      if(!file){ return this._simDetect(); }
+      this.setState({ detectState:'infer' });
+      this.apiDetect(file, this.state.detectLinkage).then(d=>{
+        this._setOnline(true);
+        const res={ id:++this._uid, image_url:d.image_url, annotated_url:d.annotated_url, detections:d.detections||[], w:d.width||480, h:d.height||300, tone:['#2a3442','#141a23'], ts:new Date().toISOString() };
+        this.setState(s=>({ detectState:'done', detectResult:res, detectHistory:[res, ...s.detectHistory].slice(0,8) }));
+        this.toast('success','识别完成，检出 '+res.detections.length+' 个目标');
+      }).catch(()=>{ this._setOnline(false); this._simDetect(); });
+    });
+  }
+  _simDetect(){
+    this.setState({ detectState:'infer' });
+    setTimeout(()=>{
+      const i=(this.state.detectHistory.length)%3;
+      const res={ ...this._detectScene(i), id:++this._uid };
+      this.setState(s=>({ detectState:'done', detectResult:res, detectHistory:[res, ...s.detectHistory].slice(0,8) }));
+      this.toast('success','识别完成，检出 '+res.detections.length+' 个目标');
+    }, 1400);
+  }
+  detectReset(){ this.setState({ detectState:'idle' }); }
+  viewDetect(item){ this.setState({ detectState:'done', detectResult:item }); }
+  toggleLinkage(){ this.setState(s=>({ detectLinkage:!s.detectLinkage })); }
+
+  // ---------- face verify ----------
+  // POST /api/face/verify (multipart). Real upload when a file is picked; the three demo buttons simulate.
+  faceVerifyUpload(){
+    if(this.state.faceState==='scanning') return;
+    this._pickFile('image/*').then(file=>{
+      if(!file){ return; }
+      this.setState({ faceState:'scanning', faceResult:null });
+      this.apiFaceVerify(file).then(d=>{
+        this._setOnline(true);
+        const name=d.person && d.person.name;
+        const result={ pass:d.pass, score:d.score, name, snapshot_url:d.snapshot_url };
+        if(d.pass){ this._pushEvent({kind:'access_pass',name,score:d.score}); this.toast('success','欢迎回家，'+name); }
+        else { this._pushEvent({kind:'access_deny',score:d.score}); this.toast('error','未授权人员，已拒绝开门'); }
+        this.setState(s=>({ faceState:d.pass?'pass':'deny', faceResult:result,
+          faceHistory:[{ id:++this._uid, pass:d.pass, name, score:d.score, ts:new Date().toISOString(), tone:d.pass?'#2f6b4f':'#6b2f2c' }, ...s.faceHistory].slice(0,5) }));
+      }).catch(()=>{ this._setOnline(false); this.faceVerify('pass'); });
+    });
+  }
+  faceVerify(force){
+    if(this.state.faceState==='scanning') return;
+    this.setState({ faceState:'scanning', faceResult:null });
+    setTimeout(()=>{
+      let kind = force || 'pass';
+      let result;
+      if(kind==='noface'){ result={pass:null}; this.toast('info','未检测到人脸，请换一张正面照片'); }
+      else if(kind==='deny'){ result={pass:false, score:0.21}; this._pushEvent({kind:'access_deny',score:0.21}); this.toast('error','未授权人员，已拒绝开门'); }
+      else { const p={name:'张三',score:0.87,avatar:'#5a4a2f'}; result={pass:true, ...p}; this._pushEvent({kind:'access_pass',name:p.name,score:p.score}); this.toast('success','欢迎回家，'+p.name); }
+      this.setState(s=>{
+        const hist = result.pass!==null ? [{ id:++this._uid, pass:result.pass, name:result.name, score:result.score, ts:new Date().toISOString(), tone: result.pass?'#2f6b4f':'#6b2f2c' }, ...s.faceHistory].slice(0,5) : s.faceHistory;
+        return { faceState: kind==='noface'?'noface':(result.pass?'pass':'deny'), faceResult:result, faceHistory:hist };
+      });
+    }, 1900);
+  }
+  faceReset(){ this.setState({ faceState:'idle', faceResult:null }); }
+  // DELETE /api/face/{face_id} — optimistic local remove
+  deleteFacePhoto(personId){
+    this.setState({ confirm:{ title:'删除人脸照片', text:'确认删除这张人脸特征？删除后该照片将不再用于识别。', okText:'删除', okBg:'#e5544b',
+      onOk:()=>{
+        this.setState(s=>({ faceLib:s.faceLib.map(g=>g.id===personId?{...g,count:Math.max(0,g.count-1)}:g) }));
+        this.apiFaceDelete(personId).then(()=>this._setOnline(true)).catch(()=>this._setOnline(false));
+        this.toast('success','已删除 1 张人脸特征');
+      } } });
+  }
+  // POST /api/face/enroll?person_id=..  — pick a photo, optimistic count bump
+  enrollFace(personId){
+    this._pickFile('image/*').then(file=>{
+      this.setState(s=>({ faceLib:s.faceLib.map(x=>x.id===personId?{...x,count:x.count+1}:x) }));
+      if(file){ this.apiFaceEnroll(personId, file).then(()=>this._setOnline(true)).catch(()=>this._setOnline(false)); }
+      this.toast('success','已追加 1 张人脸特征');
+    });
+  }
+
+  // ---------- mock seeds ----------
+  _diurnal(h){ return 27 + 5*Math.sin(2*Math.PI*(h-15)/24); }
+  _seedBuf(now){
+    const buf=[];
+    for(let i=47;i>=0;i--){
+      const t=new Date(now.getTime()-i*30*60000);
+      const h=t.getHours()+t.getMinutes()/60;
+      const temp=this._diurnal(h)+(Math.random()-0.5)*0.7;
+      const hum=56-8*Math.sin(2*Math.PI*(h-15)/24)+(Math.random()-0.5)*2.4;
+      buf.push({ ts:t.toISOString(), temp:+temp.toFixed(1), hum:+hum.toFixed(1) });
+    }
+    return buf;
+  }
+  _seedDevices(now){
+    const t=(m)=>new Date(now.getTime()-m*60000).toISOString();
+    return [
+      { device_id:'light01', name:'客厅灯', type:'light', state:{on:true,brightness:80}, updated_at:t(3) },
+      { device_id:'ac01', name:'空调', type:'ac', state:{on:false,temp_set:26}, updated_at:t(40) },
+      { device_id:'fan01', name:'风扇', type:'fan', state:{on:true,auto:true}, updated_at:t(8) },
+      { device_id:'door01', name:'入户门', type:'door', state:{open:false,locked:true}, last_access:{name:'张三',ts:t(6)} },
+      { device_id:'window01', name:'卧室窗', type:'window', state:{open:true} },
+    ];
+  }
+  _seedEvents(now){
+    const t=(m)=>new Date(now.getTime()-m*60000).toISOString();
+    return [
+      { id:6, kind:'access_pass', name:'张三', score:0.87, ts:t(6) },
+      { id:5, kind:'device', text:'客厅灯 已开启', ts:t(14) },
+      { id:4, kind:'access_deny', score:0.21, ts:t(23) },
+      { id:3, kind:'access_pass', name:'李四', score:0.91, ts:t(41) },
+      { id:2, kind:'device', text:'风扇 自动开启（室温 31.2°C）', ts:t(58) },
+      { id:1, kind:'scene', text:'已切换至 回家 模式', ts:t(72) },
+    ];
+  }
+
+  // ---------- lifecycle ----------
+  componentDidMount(){
+    this._clock = setInterval(()=>this.setState({now:new Date()}), 1000);
+    this._sensorT = setInterval(()=>this._pollSensor(), 3000);
+    this._eventT = setInterval(()=>this._pollEvent(), 5000);
+    this._pollSensor();
+    this._loadDevices();
+  }
+  componentWillUnmount(){
+    clearInterval(this._clock); clearInterval(this._sensorT); clearInterval(this._eventT);
+  }
+  // GET /api/devices → hydrate device panel from backend (once, on mount)
+  _loadDevices(){
+    this.apiDevices().then(list=>{
+      if(Array.isArray(list) && list.length){ this._setOnline(true); this.setState({ devices:list }); }
+    }).catch(()=>{ this._setOnline(false); });
+  }
+  // GET /api/sensors/latest → falls back to a local simulator when offline
+  _pollSensor(){
+    this.apiLatestSensor().then(d=>{
+      this._setOnline(true);
+      this.setState(s=>{
+        const ts=d.ts||new Date().toISOString();
+        const buf=[...s.buf, {ts, temp:d.temperature, hum:d.humidity}];
+        if(buf.length>64) buf.shift();
+        return { sensors:{temperature:d.temperature, humidity:d.humidity, ts}, buf };
+      });
+    }).catch(()=>{ this._setOnline(false); this._mockSensor(); });
+  }
+  _mockSensor(){
+    this.setState(s=>{
+      const now=new Date();
+      const h=now.getHours()+now.getMinutes()/60;
+      const last=s.buf[s.buf.length-1];
+      const temp=+(this._diurnal(h)+(Math.random()-0.5)*0.6 + (last? (last.temp-this._diurnal(h))*0.3:0)).toFixed(1);
+      const hum=+(56-8*Math.sin(2*Math.PI*(h-15)/24)+(Math.random()-0.5)*2).toFixed(1);
+      const buf=[...s.buf, {ts:now.toISOString(), temp, hum}];
+      if(buf.length>64) buf.shift();
+      return { sensors:{temperature:temp, humidity:hum, ts:now.toISOString()}, buf };
+    });
+  }
+  _pollEvent(){
+    this._evPool++;
+    if(this._evPool % 2 !== 0) return; // ~every 10s
+    const now=new Date();
+    const pool=[
+      { kind:'device', text:'客厅灯 亮度调整为 60%' },
+      { kind:'access_pass', name:'王芳', score:0.89 },
+      { kind:'device', text:'空调 已设定 24°C' },
+      { kind:'access_pass', name:'张三', score:0.93 },
+      { kind:'device', text:'卧室窗 已关闭' },
+    ];
+    const pick=pool[Math.floor(Math.random()*pool.length)];
+    this.setState(s=>({ events:[{ id:++this._uid, ts:now.toISOString(), ...pick }, ...s.events].slice(0,40) }));
+  }
+
+  // ---------- helpers ----------
+  _dev(id){ return this.state.devices.find(d=>d.device_id===id); }
+  // POST /api/devices/{id}/command — optimistic local update, then sync to backend
+  _patch(id, patch){
+    this.setState(s=>({ devices:s.devices.map(d=>d.device_id===id?{...d,state:{...d.state,...patch},updated_at:new Date().toISOString()}:d) }));
+    const dev=this._dev(id);
+    const nextState = dev ? {...dev.state, ...patch} : patch;
+    this.apiCommand(id, nextState).then(()=>this._setOnline(true)).catch(()=>this._setOnline(false));
+  }
+  _pushEvent(ev){ this.setState(s=>({ events:[{id:++this._uid, ts:new Date().toISOString(), ...ev}, ...s.events].slice(0,40)})); }
+  toast(type, msg){
+    const id=++this._uid;
+    this.setState(s=>({ toasts:[...s.toasts, {id, type, msg}] }));
+    if(type==='success') setTimeout(()=>this._dismiss(id), 2000);
+    if(type==='info') setTimeout(()=>this._dismiss(id), 4000);
+  }
+  _dismiss(id){ this.setState(s=>({ toasts:s.toasts.filter(t=>t.id!==id) })); }
+
+  _fmtRel(ts){
+    const d=(Date.now()-new Date(ts).getTime())/1000;
+    if(d<60) return '刚刚';
+    if(d<3600) return Math.floor(d/60)+' 分钟前';
+    if(d<86400) return Math.floor(d/3600)+' 小时前';
+    return Math.floor(d/86400)+' 天前';
+  }
+  _fmtClock(ts){ const d=new Date(ts); return d.toLocaleTimeString('zh-CN',{hour12:false}); }
+
+  // ============ API service layer (per FRONTEND_SPEC.md) ============
+  // Base URL: window.SH_API_BASE if set, else '' so requests hit the Vite proxy (/api, /uploads).
+  _apiBase(){ return (typeof window!=='undefined' && window.SH_API_BASE!=null) ? window.SH_API_BASE : ''; }
+  _assetUrl(p){ if(!p) return p; return /^https?:/.test(p) ? p : (this._apiBase()+p); }
+  // Unified request: unwraps {code,msg,data}; throws on code!=0 or network error.
+  async _api(path, opts){
+    const res = await fetch(this._apiBase()+path, opts || {});
+    let j; try { j = await res.json(); } catch(e){ throw new Error('bad json'); }
+    if(j && typeof j.code !== 'undefined'){
+      if(j.code !== 0) throw new Error(j.msg || ('code ' + j.code));
+      return j.data;
+    }
+    return j;
+  }
+  _setOnline(v){
+    if(this.state.online === v) return;
+    this.setState({ online:v });
+    if(v === false && !this._offlineToasted){ this._offlineToasted = true; this.toast('info','未连接后端，已进入演示模式（模拟数据）'); }
+    if(v === true){ this._offlineToasted = false; }
+  }
+  // Endpoint helpers — the exact contract from the spec
+  apiLatestSensor(){ return this._api('/api/sensors/latest'); }
+  apiDevices(){ return this._api('/api/devices'); }
+  apiCommand(id, state){ return this._api('/api/devices/'+id+'/command', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'set', state }) }); }
+  apiScene(name){ return this._api('/api/scene/'+name, { method:'POST' }); }
+  apiFaceVerify(file){ const fd=new FormData(); fd.append('file', file); return this._api('/api/face/verify', { method:'POST', body:fd }); }
+  apiFaceLibrary(){ return this._api('/api/face/library'); }
+  apiFaceEnroll(personId, file){ const fd=new FormData(); fd.append('file', file); return this._api('/api/face/enroll?person_id='+personId, { method:'POST', body:fd }); }
+  apiFaceDelete(faceId){ return this._api('/api/face/'+faceId, { method:'DELETE' }); }
+  apiDetect(file, linkage){ const fd=new FormData(); fd.append('file', file); return this._api('/api/detect'+(linkage?'?linkage=1':''), { method:'POST', body:fd }); }
+  apiSensorHistory(metric, start, end, interval){ return this._api('/api/sensors/history?metric='+metric+'&start='+encodeURIComponent(start)+'&end='+encodeURIComponent(end)+'&interval='+interval); }
+  apiPersons(keyword, page, size){ return this._api('/api/persons?keyword='+encodeURIComponent(keyword||'')+'&page='+page+'&size='+size); }
+  apiPersonCreate(body){ return this._api('/api/persons', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) }); }
+  apiPersonUpdate(id, body){ return this._api('/api/persons/'+id, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) }); }
+  apiPersonDelete(id){ return this._api('/api/persons/'+id, { method:'DELETE' }); }
+  apiLogs(params){ const q=Object.keys(params||{}).filter(k=>params[k]!=null&&params[k]!=='').map(k=>k+'='+encodeURIComponent(params[k])).join('&'); return this._api('/api/logs'+(q?'?'+q:'')); }
+  apiUpload(file){ const fd=new FormData(); fd.append('file', file); return this._api('/api/upload', { method:'POST', body:fd }); }
+  // Open a native file picker; resolves with the chosen File (or null).
+  _pickFile(accept){
+    return new Promise((resolve)=>{
+      const inp=document.createElement('input'); inp.type='file'; inp.accept=accept||'image/*';
+      inp.onchange=()=>resolve(inp.files && inp.files[0] || null);
+      inp.click();
+    });
+  }
+
+  // ---------- scene ----------
+  // POST /api/scene/{away|home|night}; on success re-fetch devices, else apply local map
+  setScene(scene){
+    if(this.state.sceneLoading) return;
+    this.setState({sceneLoading:scene});
+    const label={away:'离家',home:'回家',night:'睡眠'}[scene];
+    const applyLocal=()=>{
+      const map={
+        away:{light01:{on:false}, ac01:{on:false}, fan01:{on:false,auto:false}, door01:{locked:true}},
+        home:{light01:{on:true,brightness:80}, ac01:{on:true,temp_set:26}, door01:{locked:true}},
+        night:{light01:{on:true,brightness:10}, fan01:{on:true,auto:false}, window01:{open:false}},
+      };
+      const changes=map[scene]||{};
+      this.setState(s=>({ scene, sceneLoading:null, devices:s.devices.map(d=>changes[d.device_id]?{...d,state:{...d.state,...changes[d.device_id]}}:d) }));
+    };
+    const finish=()=>{ this._pushEvent({kind:'scene', text:'已切换至 '+label+' 模式'}); this.toast('success','已切换至'+label+'模式'); };
+    this.apiScene(scene).then(()=>{
+      this._setOnline(true);
+      return this.apiDevices().then(list=>{
+        if(Array.isArray(list)&&list.length) this.setState({ scene, sceneLoading:null, devices:list });
+        else applyLocal();
+      }).catch(()=>applyLocal());
+    }).catch(()=>{ this._setOnline(false); setTimeout(applyLocal, 500); }).finally(finish);
+  }
+
+  _faceVals(){
+    const S=this.state;
+    const tab=S.faceTab, st=S.faceState, r=S.faceResult||{};
+    const tabStyle=(k)=>'padding:9px 20px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:500;white-space:nowrap;border:1px solid '+(tab===k?'#3a4757':'transparent')+';background:'+(tab===k?'#1c232e':'transparent')+';color:'+(tab===k?'#f7c98a':'#8b95a3')+';';
+    const roleTag={owner:{t:'户主',c:'#f2a950',bg:'#2a2113',bd:'#6a4e26'},family:{t:'家人',c:'#5b8def',bg:'#141f34',bd:'#2c3f66'},guest:{t:'访客',c:'#98a2b0',bg:'#1c232e',bd:'#2a3442'}};
+    const faceHistoryView=S.faceHistory.map(h=>({
+      pass:h.pass, ok:h.pass===true,
+      label: h.pass? ('通过 · '+h.name) : '拒绝',
+      score:(h.score!=null?h.score.toFixed(2):'—'),
+      time:this._fmtClock(h.ts).slice(0,5),
+      tone:h.tone,
+      dot: h.pass?'#46b98a':'#e5544b',
+    }));
+    const faceLibView=S.faceLib.map(g=>{
+      const rt=roleTag[g.role]||roleTag.guest;
+      const photos=Array.from({length:g.count},(_,i)=>({ i, del:()=>this.deleteFacePhoto(g.id) }));
+      return { id:g.id, name:g.name, tone:g.tone, count:g.count, empty:g.count===0,
+        roleText:rt.t, roleStyle:'font-size:11px;color:'+rt.c+';background:'+rt.bg+';border:1px solid '+rt.bd+';padding:1px 8px;border-radius:6px;',
+        photos, addPhoto:()=>this.enrollFace(g.id) };
+    });
+    return {
+      faceTab:tab,
+      goVerifyTab:()=>this.setState({faceTab:'verify'}),
+      goLibTab:()=>this.setState({faceTab:'lib'}),
+      faceTabVerifyStyle:tabStyle('verify'), faceTabLibStyle:tabStyle('lib'),
+      faceIsVerify:tab==='verify', faceIsLib:tab==='lib',
+      // verify states
+      faceIdle:st==='idle', faceScanning:st==='scanning', facePass:st==='pass', faceDeny:st==='deny', faceNoface:st==='noface',
+      faceRunDemo:()=>this.faceVerify('pass'),
+      faceDemoPass:()=>this.faceVerify('pass'),
+      faceDemoDeny:()=>this.faceVerify('deny'),
+      faceDemoNoface:()=>this.faceVerify('noface'),
+      faceReset:()=>this.faceReset(),
+      faceName:r.name||'', faceScore:(r.score!=null?r.score.toFixed(2):''),
+      faceOpenSnap:()=>this.setState({lightbox:{c1:'#3a1c1a',c2:'#1a1210',caption:'门禁抓拍 · 未授权人员'}}),
+      faceHistoryView,
+      // lib
+      faceLibView, faceLibEmpty:S.faceLib.length===0,
+    };
+  }
+
+  _detectVals(){
+    const S=this.state, r=S.detectResult, map=this._clsMap();
+    const boxes=(r&&r.detections||[]).map((d,i)=>{
+      const [x1,y1,x2,y2]=d.box, c=this._clsColor(d.cls);
+      return { key:i, label:(map[d.cls]||d.cls)+' '+d.conf.toFixed(2), color:c,
+        boxStyle:'position:absolute;left:'+(x1/r.w*100).toFixed(2)+'%;top:'+(y1/r.h*100).toFixed(2)+'%;width:'+((x2-x1)/r.w*100).toFixed(2)+'%;height:'+((y2-y1)/r.h*100).toFixed(2)+'%;border:2px solid '+c+';border-radius:3px;',
+        tagStyle:'position:absolute;top:-18px;left:-2px;background:'+c+';color:#08130d;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px 4px 4px 0;white-space:nowrap;' };
+    });
+    const rows=(r&&r.detections||[]).map(d=>({ cls:map[d.cls]||d.cls, en:d.cls, conf:(d.conf*100).toFixed(0), confText:d.conf.toFixed(2),
+      color:this._clsColor(d.cls), barStyle:'height:6px;border-radius:4px;background:'+this._clsColor(d.cls)+';width:'+(d.conf*100).toFixed(0)+'%;',
+      box:'['+d.box.join(', ')+']' }));
+    const history=S.detectHistory.map(h=>({ id:h.id, tone:h.tone, count:(h.detections||[]).length, view:()=>this.viewDetect(h),
+      firstBoxes:(h.detections||[]).slice(0,3).map((d,i)=>{ const [x1,y1,x2,y2]=d.box; return { key:i, style:'position:absolute;left:'+(x1/h.w*100).toFixed(1)+'%;top:'+(y1/h.h*100).toFixed(1)+'%;width:'+((x2-x1)/h.w*100).toFixed(1)+'%;height:'+((y2-y1)/h.h*100).toFixed(1)+'%;border:1.5px solid '+this._clsColor(d.cls)+';border-radius:2px;' }; }) }));
+    return {
+      detectIdle:S.detectState==='idle', detectInfer:S.detectState==='infer', detectDone:S.detectState==='done',
+      runDetect:()=>this.runDetect(), detectReset:()=>this.detectReset(),
+      toggleLinkage:()=>this.toggleLinkage(),
+      linkageSw:'width:36px;height:20px;border-radius:11px;position:relative;flex:0 0 36px;transition:background .2s;display:inline-block;background:'+(S.detectLinkage?'#f2a950':'#2a3442')+';',
+      linkageKnob:'position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;transform:translateX('+(S.detectLinkage?'16px':'0')+');',
+      detectBoxes:boxes, detectRows:rows,
+      detectTone1:(r&&r.tone[0])||'#2a3442', detectTone2:(r&&r.tone[1])||'#141a23',
+      detectCount:(r&&r.detections||[]).length,
+      detectOpenOrig:()=>this.setState({lightbox:{c1:(r&&r.tone[0])||'#2a3442',c2:(r&&r.tone[1])||'#141a23',caption:'原图'}}),
+      detectOpenAnno:()=>this.setState({lightbox:{c1:(r&&r.tone[0])||'#2a3442',c2:(r&&r.tone[1])||'#141a23',caption:'标注图 · 检出 '+((r&&r.detections||[]).length)+' 个目标'}}),
+      detectHistoryView:history,
+      detectHasImg: !!(r && r.annotated_url),
+      detectOrigImg: (r && r.image_url) ? React.createElement('img', { src:this._assetUrl(r.image_url), alt:'原图', style:{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' } }) : '',
+      detectAnnoImg: (r && r.annotated_url) ? React.createElement('img', { src:this._assetUrl(r.annotated_url), alt:'标注图', style:{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' } }) : '',
+    };
+  }
+
+  _historyVals(){
+    const S=this.state;
+    const gen=this._histGen(S.hMetric,S.hRange,S.hInterval,S.hNonce);
+    const meta=gen.meta;
+    const pts = (S.hLiveRows && S.hLiveRows.length)
+      ? S.hLiveRows.map(r=>({ ts:r.ts, avg:r.avg, max:r.max, min:r.min }))
+      : gen.pts;
+    const s=Math.floor(pts.length*S.hZoomS/100), e=Math.max(s+2,Math.ceil(pts.length*S.hZoomE/100));
+    const slice=pts.slice(s,e);
+    const avgs=slice.map(p=>p.avg), maxs=slice.map(p=>p.max), mins=slice.map(p=>p.min);
+    const lo=Math.min(...mins)-2, hi=Math.max(...maxs)+2, rng=(hi-lo)||1;
+    const W=760,H=210,px=10;
+    const X=i=>px+i*(W-2*px)/((slice.length-1)||1);
+    const Y=v=>H-14-(v-lo)/rng*(H-30);
+    const avgLine=slice.map((p,i)=>`${X(i).toFixed(1)},${Y(p.avg).toFixed(1)}`).join(' ');
+    const bandTop=slice.map((p,i)=>`${X(i).toFixed(1)},${Y(p.max).toFixed(1)}`).join(' ');
+    const bandBot=slice.map((p,i)=>`${X(i).toFixed(1)},${Y(p.min).toFixed(1)}`).reverse().join(' ');
+    const band=bandTop+' '+bandBot;
+    const mean=avgs.reduce((a,b)=>a+b,0)/avgs.length;
+    const fmt=(v)=>v.toFixed(1)+meta.unit;
+    const tickIdx=[0,Math.floor(slice.length/3),Math.floor(slice.length*2/3),slice.length-1];
+    const ticks=tickIdx.map(i=>({ x:X(i), label: new Date(slice[i].ts).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).replace(/\//g,'-') }));
+    // overview (full) mini
+    const ov=pts.map((p,i)=>`${(i*W/(pts.length-1)).toFixed(1)},${(40-((p.avg-lo)/rng)*34-3).toFixed(1)}`).join(' ');
+    const metricBtn=(k)=>'padding:7px 14px;border-radius:9px;cursor:pointer;font-size:13px;border:1px solid '+(S.hMetric===k?'#3a4757':'#232c39')+';background:'+(S.hMetric===k?'#1c232e':'#141a23')+';color:'+(S.hMetric===k?'#f7c98a':'#98a2b0')+';white-space:nowrap;';
+    const chip=(val,cur,fn)=>({ style:'padding:6px 13px;border-radius:8px;cursor:pointer;font-size:12.5px;white-space:nowrap;border:1px solid '+(cur?'#3a4757':'#232c39')+';background:'+(cur?'#1c232e':'transparent')+';color:'+(cur?'#f7c98a':'#98a2b0')+';', on:fn });
+    const changes=this._histStateChanges().map(c=>({ ...c, time:this._fmtClock(c.ts).slice(0,5), date:new Date(c.ts).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'}) }));
+    return {
+      hMetric:S.hMetric, hMetricLabel:meta.label, hUnit:meta.unit, hColor:meta.color,
+      hMetricTemp:metricBtn('temperature'), hMetricHum:metricBtn('humidity'), hMetricBri:metricBtn('brightness'),
+      setMetricTemp:()=>this.setState({hMetric:'temperature'}), setMetricHum:()=>this.setState({hMetric:'humidity'}), setMetricBri:()=>this.setState({hMetric:'brightness'}),
+      rangeToday:chip('today',S.hRange==='today',()=>this.setState({hRange:'today',hZoomS:0,hZoomE:100})),
+      range24h:chip('24h',S.hRange==='24h',()=>this.setState({hRange:'24h',hZoomS:0,hZoomE:100})),
+      range7d:chip('7d',S.hRange==='7d',()=>this.setState({hRange:'7d',hZoomS:0,hZoomE:100})),
+      int5m:chip('5m',S.hInterval==='5m',()=>this.setState({hInterval:'5m'})),
+      int1h:chip('1h',S.hInterval==='1h',()=>this.setState({hInterval:'1h'})),
+      runHistoryQuery:()=>this.runHistoryQuery(),
+      hAvgLine:avgLine, hBand:band, hTicks:ticks, hOverview:ov,
+      hMean:fmt(mean), hMax:fmt(Math.max(...maxs)), hMin:fmt(Math.min(...mins)),
+      hZoomS:S.hZoomS, hZoomE:S.hZoomE,
+      onZoomS:(ev)=>{ const v=Math.min(+ev.target.value,S.hZoomE-5); this.setState({hZoomS:v}); },
+      onZoomE:(ev)=>{ const v=Math.max(+ev.target.value,S.hZoomS+5); this.setState({hZoomE:v}); },
+      hChanges:changes,
+    };
+  }
+
+  render(){}
+  renderVals(){
+    const S=this.state;
+    const sensors=S.sensors||{temperature:S.buf[S.buf.length-1].temp, humidity:S.buf[S.buf.length-1].hum};
+    const light=this._dev('light01'), ac=this._dev('ac01'), fan=this._dev('fan01'), door=this._dev('door01'), win=this._dev('window01');
+    const lb = S.lightDraft!=null ? S.lightDraft : light.state.brightness;
+    const lightOn = light.state.on;
+
+    // nav styles
+    const navBase='display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;cursor:pointer;text-decoration:none;font-weight:500;font-size:13.5px;transition:all .15s;';
+    const navSt={};
+    ['dashboard','face','detect','history','persons','logs'].forEach(r=>{
+      navSt[r] = navBase + (S.route===r
+        ? 'background:linear-gradient(90deg,rgba(242,169,80,.16),rgba(242,169,80,.04));color:#f7c98a;box-shadow:inset 2px 0 0 #f2a950;'
+        : 'background:transparent;color:#8b95a3;');
+    });
+
+    // scene buttons
+    const sceneBtnStyle=(k)=>{
+      const active=S.scene===k, loading=S.sceneLoading===k;
+      return 'padding:6px 15px;border-radius:8px;border:none;cursor:pointer;font-size:12.5px;font-weight:500;font-family:inherit;white-space:nowrap;transition:all .15s;'+
+        (active?'background:#f2a950;color:#1a1206;':'background:transparent;color:#98a2b0;')+
+        (loading?'opacity:.6;':'');
+    };
+
+    // switches
+    const sw=(on)=>'width:40px;height:23px;border-radius:12px;cursor:pointer;position:relative;transition:background .2s;flex:0 0 40px;background:'+(on?'#f2a950':'#2a3442')+';';
+    const knob=(on)=>'position:absolute;top:2.5px;left:2.5px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;transform:translateX('+(on?'17px':'0')+');box-shadow:0 1px 3px rgba(0,0,0,.4);';
+
+    // sparklines
+    const spark=(key,color)=>{
+      const arr=S.buf.slice(-16).map(p=>p[key]);
+      const mn=Math.min(...arr), mx=Math.max(...arr), rng=(mx-mn)||1;
+      return arr.map((v,i)=>`${(i*120/(arr.length-1)).toFixed(1)},${(30-(v-mn)/rng*26+2).toFixed(1)}`).join(' ');
+    };
+
+    // 24h chart
+    const buf=S.buf;
+    const temps=buf.map(p=>p.temp), hums=buf.map(p=>p.hum);
+    const tMin=Math.min(...temps)-1, tMax=Math.max(...temps)+1;
+    const hMin=Math.min(...hums)-3, hMax=Math.max(...hums)+3;
+    const xAt=i=>8+i*(584)/(buf.length-1);
+    const yT=v=>170-(v-tMin)/(tMax-tMin)*150;
+    const yH=v=>170-(v-hMin)/(hMax-hMin)*150;
+    const chartTemp=buf.map((p,i)=>`${xAt(i).toFixed(1)},${yT(p.temp).toFixed(1)}`).join(' ');
+    const chartHum=buf.map((p,i)=>`${xAt(i).toFixed(1)},${yH(p.hum).toFixed(1)}`).join(' ');
+    const tickT=(idx)=>this._fmtClock(buf[idx].ts).slice(0,5);
+
+    // events view
+    const eventsView=S.events.map(ev=>{
+      const base='display:flex;gap:10px;padding:9px 9px;border-radius:10px;margin-bottom:2px;animation:slideIn .35s ease;';
+      let o={ text:ev.text, timeText:this._fmtRel(ev.ts)+' · '+this._fmtClock(ev.ts), hasSnap:false, hasDot:true, dot:'#6b7686', textColor:'#c4ccd6', weight:'400', rowStyle:base+'background:transparent;' };
+      if(ev.kind==='access_pass'){ o.text='门禁通过 · '+ev.name+' ('+ev.score+')'; o.dot='#46b98a'; o.textColor='#cfe8dd'; }
+      else if(ev.kind==='access_deny'){ o.text='门禁拒绝 · 未授权人员 ('+ev.score+')'; o.hasSnap=true; o.hasDot=false; o.weight='500'; o.textColor='#f4b0ab'; o.rowStyle=base+'background:rgba(229,84,75,.10);border:1px solid rgba(229,84,75,.3);'; o.snapBg='#2a1614'; o.snapBorder='#5a2a26'; o.snapIcon='#e5544b'; o.openSnap=()=>this.setState({lightbox:{c1:'#3a1c1a',c2:'#1a1210',caption:'门禁抓拍 · 未授权 '+this._fmtClock(ev.ts)}}); }
+      else if(ev.kind==='scene'){ o.dot='#5b8def'; o.textColor='#bcd0f2'; }
+      return o;
+    });
+
+    // toasts
+    const toasts=S.toasts.map(t=>({
+      msg:t.msg,
+      dot: t.type==='error'?'#e5544b':t.type==='success'?'#46b98a':'#5b8def',
+      closable: t.type==='error',
+      close:()=>this._dismiss(t.id),
+      style:'display:flex;align-items:center;gap:10px;min-width:240px;max-width:340px;padding:12px 14px;border-radius:12px;background:#1c232e;border:1px solid '+(t.type==='error'?'#5a2a26':'#2a3442')+';box-shadow:0 10px 30px rgba(0,0,0,.4);animation:toastIn .3s ease;'
+    }));
+
+    const denyActive = (Date.now()-S.denyAt)<1500;
+
+    return {
+      ...this._faceVals(),
+      ...this._detectVals(),
+      ...this._historyVals(),
+      // connectivity
+      connDot: S.online===true?'#46b98a':(S.online===false?'#e0a24b':'#6b7686'),
+      connText: S.online===true?'后端已连接':(S.online===false?'演示模式（离线）':'连接中…'),
+      // face upload (real verify)
+      faceRunUpload:()=>this.faceVerifyUpload(),
+      // nav
+      navSt,
+      goDashboard:()=>this.setState({route:'dashboard'}),
+      goFace:()=>this.setState({route:'face'}),
+      goDetect:()=>this.setState({route:'detect'}),
+      goHistory:()=>this.setState({route:'history'}),
+      goPersons:()=>this.setState({route:'persons'}),
+      goLogs:()=>this.setState({route:'logs'}),
+      isDashboard:S.route==='dashboard', isFace:S.route==='face', isDetect:S.route==='detect',
+      isHistory:S.route==='history', isPersons:S.route==='persons', isLogs:S.route==='logs',
+      pageTitle:{dashboard:'监控大屏',face:'人脸门禁',detect:'物体识别',history:'历史数据',persons:'人员管理',logs:'操作日志'}[S.route],
+      pageSub:{dashboard:'实时联动 · 演示主视图',face:'门禁验证与人脸库',detect:'YOLO 物体检测',history:'传感器历史查询',persons:'家庭成员与访客',logs:'系统操作审计'}[S.route],
+
+      // clock
+      clock:S.now.toLocaleTimeString('zh-CN',{hour12:false}),
+      dateStr:S.now.toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}),
+
+      // scene
+      sceneAway:()=>this.setScene('away'), sceneHome:()=>this.setScene('home'), sceneNight:()=>this.setScene('night'),
+      sceneBtn:{away:sceneBtnStyle('away'),home:sceneBtnStyle('home'),night:sceneBtnStyle('night')},
+      sceneLabel:{away:'离家模式',home:'回家模式',night:'睡眠模式'}[S.scene],
+
+      // sensors
+      tempVal:sensors.temperature.toFixed(1),
+      humVal:sensors.humidity.toFixed(1),
+      tempColor: sensors.temperature>30 ? '#e5544b' : '#f2a950',
+      tempSpark:spark('temp'), humSpark:spark('hum'),
+
+      // light
+      lightBrightness:lb,
+      toggleLight:()=>{ const on=!lightOn; this._patch('light01',{on}); this._pushEvent({kind:'device',text:'客厅灯 已'+(on?'开启':'关闭')}); },
+      onLightDrag:(e)=>this.setState({lightDraft:+e.target.value}),
+      onLightCommit:(e)=>{ const v=+e.target.value; this._patch('light01',{brightness:v, on:v>0}); this.setState({lightDraft:null}); },
+      swLight:sw(lightOn), swLightKnob:knob(lightOn),
+      lightIconBg: lightOn?'#2a2113':'#1c232e', lightIconStroke: lightOn?'#f2a950':'#6b7686',
+
+      // ac
+      acTemp:ac.state.temp_set, acStateText: ac.state.on?('制冷 '+ac.state.temp_set+'°C'):'已关闭',
+      toggleAc:()=>this._patch('ac01',{on:!ac.state.on}),
+      acUp:()=>{ if(ac.state.temp_set<30) this._patch('ac01',{temp_set:ac.state.temp_set+1}); },
+      acDown:()=>{ if(ac.state.temp_set>16) this._patch('ac01',{temp_set:ac.state.temp_set-1}); },
+      swAc:sw(ac.state.on), swAcKnob:knob(ac.state.on),
+      acIconBg: ac.state.on?'#13232a':'#1c232e', acIconStroke: ac.state.on?'#5bd0e0':'#6b7686',
+
+      // fan
+      fanAuto: fan.state.on && fan.state.auto,
+      toggleFan:()=>this._patch('fan01',{on:!fan.state.on, auto:false}),
+      swFan:sw(fan.state.on), swFanKnob:knob(fan.state.on),
+      fanIconBg: fan.state.on?'#13232a':'#1c232e', fanIconStroke: fan.state.on?'#5bd0e0':'#6b7686',
+      fanSpinStyle: fan.state.on?'transform-origin:12px 12px;animation:fanSpin 1.6s linear infinite;':'',
+      fanSpinPlan: fan.state.on?'animation:fanSpin 1.6s linear infinite;':'',
+
+      // door/window
+      doorStateText: door.state.locked?'已锁定':(door.state.open?'开启':'关闭'),
+      doorLastName: door.last_access.name, doorLastTime:this._fmtRel(door.last_access.ts),
+      windowStateText: win.state.open?'开启':'关闭', windowDot: win.state.open?'#f2a950':'#46b98a',
+
+      // floor plan
+      glowR: lightOn? (60+lb*0.9) : 40,
+      glowOpacity: lightOn? (0.25+lb/100*0.75) : 0,
+      lightRing: lightOn?'#f2a950':'#3a4757',
+      acRing: ac.state.on?'#5bd0e0':'#3a4757',
+      fanRing: fan.state.on?'#5bd0e0':'#3a4757',
+      windowRing: win.state.open?'#f2a950':'#46b98a',
+      doorRing: door.state.locked?'#46b98a':'#f2a950',
+      denyFlashStyle: denyActive?'animation:denyFlash 1.2s ease;':'opacity:0;',
+
+      // chart
+      hasChart: buf.length>2,
+      legend:S.legend,
+      chartTemp, chartHum,
+      chartT0:tickT(0), chartT1:tickT(Math.floor(buf.length/3)), chartT2:tickT(Math.floor(buf.length*2/3)),
+      toggleTempLegend:()=>this.setState(s=>({legend:{...s.legend,temp:!s.legend.temp}})),
+      toggleHumLegend:()=>this.setState(s=>({legend:{...s.legend,hum:!s.legend.hum}})),
+      legendTemp:'display:inline-flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;opacity:'+(S.legend.temp?'1':'.4')+';color:#c4ccd6;',
+      legendHum:'display:inline-flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;opacity:'+(S.legend.hum?'1':'.4')+';color:#c4ccd6;',
+
+      // events
+      eventsView,
+
+      // yolo
+      openYolo:()=>this.setState({lightbox:{c1:'#1e2a20',c2:'#12181a',caption:'最近识别 · 人 0.92'}}),
+
+      // toasts + dialogs
+      toasts,
+      hasConfirm:!!S.confirm, confirm:S.confirm||{},
+      confirmCancel:()=>this.setState({confirm:null}),
+      confirmOk:()=>{ const c=S.confirm; this.setState({confirm:null}); if(c&&c.onOk) c.onOk(); },
+      hasLightbox:!!S.lightbox, lightbox:S.lightbox||{},
+      closeLightbox:()=>this.setState({lightbox:null}),
+    };
+  }
+}
+</script>
+</body>
+</html>
