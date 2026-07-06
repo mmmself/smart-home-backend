@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
 
 const http = axios.create({ baseURL: '/', timeout: 15000 })
 
@@ -7,13 +6,13 @@ http.interceptors.response.use(
   (res) => {
     const d = res.data
     if (d.code !== 0 && d.code !== undefined) {
-      ElMessage.error(d.msg || '请求失败')
+      console.error('API error:', d.msg || '请求失败')
       return Promise.reject(new Error(d.msg))
     }
     return d.data
   },
   (err) => {
-    ElMessage.error(err.message || '网络错误')
+    console.error('Network error:', err.message || '网络错误')
     return Promise.reject(err)
   }
 )
