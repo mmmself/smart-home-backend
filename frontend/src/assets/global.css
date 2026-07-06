@@ -1,26 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
 :root {
   --bg-primary: #0d1015;
   --bg-secondary: #12171f;
-  --bg-card: #151b24;
+  --bg-card: #181f29;
   --border-color: #1e2530;
   --text-primary: #e9e6df;
   --text-secondary: #8b95a3;
   --text-muted: #6b7686;
   --accent: #f2a950;
-  --accent-dim: #c47a2c;
-  --green: #34d399;
-  --red: #f87171;
-  --blue: #60a5fa;
 }
-html.dark {
-  color-scheme: dark;
-}
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-thumb { background: #2a3442; border-radius: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#app{height:100%}
+body{font-family:'Noto Sans SC',system-ui,sans-serif;font-size:14px;background:#0d1015;color:#e9e6df}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:#2a3442;border-radius:6px}
+::-webkit-scrollbar-track{background:transparent}
+
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes scanline{0%{transform:translateY(0)}100%{transform:translateY(260px)}}
+@keyframes doorL{to{transform:translateX(-100%)}}
+@keyframes doorR{to{transform:translateX(100%)}}
+@keyframes shimmer{0%{background-position:-320px 0}100%{background-position:320px 0}}
+@keyframes denyFlash{0%,100%{opacity:0}25%,60%{opacity:.55}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fanSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}
