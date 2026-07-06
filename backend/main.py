@@ -35,8 +35,9 @@ def on_startup():
     try:
         from .services.mqtt_service import start_mqtt
         start_mqtt()
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"MQTT startup failed: {e}")
 
 
 @app.get("/")

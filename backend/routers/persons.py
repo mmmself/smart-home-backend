@@ -79,7 +79,8 @@ def delete_person(person_id: int, db: Session = Depends(get_db)):
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
     today = datetime.now().strftime("%Y%m%d")
-    upload_dir = os.path.join("backend", "uploads", today)
+    backend_dir = os.path.dirname(os.path.dirname(__file__))
+    upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
     ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
     filename = f"{uuid.uuid4().hex}{ext}"

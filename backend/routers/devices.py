@@ -50,8 +50,9 @@ def device_command(device_id: str, body: CommandBody, db: Session = Depends(get_
         from ..services.mqtt_service import mqtt_publish
         from ..config import TOPIC_SUFFIX
         mqtt_publish(f"home/{TOPIC_SUFFIX}/cmd/{device_id}", json.dumps(body.state))
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"MQTT publish failed: {e}")
 
     return resp({
         "device_id": device.device_id,

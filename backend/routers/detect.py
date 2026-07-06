@@ -8,8 +8,6 @@ from ..config import TOPIC_SUFFIX
 import os
 import uuid
 from datetime import datetime
-import json
-
 router = APIRouter(prefix="/api")
 
 
@@ -20,7 +18,8 @@ async def detect_image(
     db: Session = Depends(get_db),
 ):
     today = datetime.now().strftime("%Y%m%d")
-    upload_dir = os.path.join("backend", "uploads", today)
+    backend_dir = os.path.dirname(os.path.dirname(__file__))
+    upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
     ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
     filename = f"{uuid.uuid4().hex}{ext}"
@@ -31,12 +30,13 @@ async def detect_image(
 
     image_url = f"/uploads/{today}/{filename}"
     annotated_path, detections = yolo_detect(filepath)
-    annotated_url = annotated_path.replace("backend", "").replace("\\", "/")
+    annotated_filename = os.path.basename(annotated_path)
+    annotated_url = f"/uploads/{today}/{annotated_filename}"
 
     detection_record = Detection(
         image_path=image_url,
         annotated_path=annotated_url,
-        result_json=json.dumps(detections),
+        result_json=detections,
     )
     db.add(detection_record)
 

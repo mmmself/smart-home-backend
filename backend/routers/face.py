@@ -24,8 +24,9 @@ async def enroll(
     if not person:
         return resp(code=1, msg="人员不存在")
 
+    backend_dir = os.path.dirname(os.path.dirname(__file__))
     today = datetime.now().strftime("%Y%m%d")
-    upload_dir = os.path.join("backend", "uploads", today)
+    upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
     ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
     filename = f"{uuid.uuid4().hex}{ext}"
@@ -57,8 +58,9 @@ async def verify(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
+    backend_dir = os.path.dirname(os.path.dirname(__file__))
     today = datetime.now().strftime("%Y%m%d")
-    upload_dir = os.path.join("backend", "uploads", today)
+    upload_dir = os.path.join(backend_dir, "uploads", today)
     os.makedirs(upload_dir, exist_ok=True)
     ext = os.path.splitext(file.filename or ".jpg")[1] or ".jpg"
     filename = f"{uuid.uuid4().hex}{ext}"
