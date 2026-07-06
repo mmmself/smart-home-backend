@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+backend/uploads/*
+!backend/uploads/.gitkeep
+models/*.pt
+mysql_data/
+test_data/faces/*
+runs/
+*.onnx
+.venv/
