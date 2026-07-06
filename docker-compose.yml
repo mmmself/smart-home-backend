@@ -8,10 +8,17 @@ services:
       MYSQL_DATABASE: smart_home
       MYSQL_USER: smart
       MYSQL_PASSWORD: smart123456
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    ports:
-      - "3306:3306"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
     volumes:
       - mysql_data:/var/lib/mysql
+  mysql-proxy:
+    image: alpine/socat
+    container_name: smart_home_mysql_proxy
+    restart: unless-stopped
+    command: TCP-LISTEN:3306,fork,reuseaddr TCP:mysql:3306
+    ports:
+      - "3307:3306"
+    depends_on:
+      - mysql
 volumes:
   mysql_data:
