@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from .database import engine, Base
 from . import models
-from .routers import persons, detect, face, devices, logs, scene, sensors
+from .routers import persons, detect, face, devices, logs, scene, sensors, access
 from .config import CORS_ORIGINS, API_KEY
 import os
 import logging
@@ -72,6 +72,7 @@ app.include_router(devices.router, dependencies=[Depends(verify_api_key)])
 app.include_router(logs.router, dependencies=[Depends(verify_api_key)])
 app.include_router(scene.router, dependencies=[Depends(verify_api_key)])
 app.include_router(sensors.router, dependencies=[Depends(verify_api_key)])
+app.include_router(access.router, dependencies=[Depends(verify_api_key)])
 
 
 @app.get("/")
