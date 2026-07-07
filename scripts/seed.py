@@ -32,11 +32,12 @@ try:
     db.flush()
 
     devices = [
-        Device(device_id="light01", name="客厅灯", type="light", state={"on": True, "brightness": 80}),
+        Device(device_id="light01", name="客厅灯(逻辑)", type="light", state={"on": True, "brightness": 80, "logical": True, "note": "无物理灯,仅逻辑演示"}),
         Device(device_id="ac01", name="客厅空调", type="ac", state={"on": False, "temp_set": 26}),
         Device(device_id="fan01", name="风扇", type="fan", state={"on": False, "auto": False}),
-        Device(device_id="door01", name="大门", type="door", state={"locked": True}),
-        Device(device_id="window01", name="窗户", type="window", state={"open": False}),
+        Device(device_id="door01", name="大门", type="door", state={"open": False}),
+        Device(device_id="window01", name="窗户(无硬件)", type="window", state={"open": False, "logical": True, "note": "无门窗磁,仅逻辑态"}),
+        Device(device_id="display01", name="OLED显示屏", type="display", state={"text": ""}),
     ]
     db.add_all(devices)
 

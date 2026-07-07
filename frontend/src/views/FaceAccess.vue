@@ -127,7 +127,7 @@
           <span class="h-dot" :style="{background: h.pass ? '#2dbd7a' : '#e5544b'}"></span>
           <div style="flex: 1">
             <div class="h-label" :style="{color: h.pass ? '#2dbd7a' : '#e5544b'}">{{ h.pass ? (h.name || '通过') : '拒绝' }}</div>
-            <div class="h-meta">相似度 {{ h.score }} · {{ h.time }}</div>
+            <div class="h-meta"><span class="h-method" :style="{color:h.method==='键盘'?'#5bd0e0':'#f2a950'}">{{ h.method }}</span> · {{ h.score!=='--' ? '相似度 '+h.score+' · ' : '' }}{{ h.time }}</div>
           </div>
         </div>
         <EmptyState v-if="!history.length" icon="clock" text="暂无验证记录" />
@@ -192,7 +192,7 @@ const doUpload = async () => {
     setOnline(true)
     result.value = d
     state.value = d.pass ? 'pass' : 'deny'
-    const h = { id: Date.now(), pass: d.pass, name: d.person?.name, score: d.score?.toFixed(2) || '0.00', time: dayjs().format('HH:mm') }
+    const h = { id: Date.now(), pass: d.pass, name: d.person?.name, method:'人脸', score: d.score?.toFixed(2) || '0.00', time: dayjs().format('HH:mm') }
     history.value = [h, ...history.value].slice(0, 5)
     showToast(d.pass ? 'success' : 'error', d.pass ? `欢迎回家${d.person?.name ? '，' + d.person.name : ''}` : '未授权人员，已拒绝开门')
   } catch (e) {
@@ -213,7 +213,7 @@ const simVerify = (kind) => {
     if (kind === 'noface') { state.value = 'noface'; showToast('info', '未检测到人脸'); return }
     const r = kind === 'deny' ? { pass: false, score: 0.21 } : { pass: true, name: '张三', score: 0.87 }
     result.value = r; state.value = kind === 'deny' ? 'deny' : 'pass'
-    const h = { id: Date.now(), pass: r.pass, name: r.name, score: r.score.toFixed(2), time: dayjs().format('HH:mm') }
+    const h = { id: Date.now(), pass: r.pass, name: r.name, method:'人脸', score: r.score.toFixed(2), time: dayjs().format('HH:mm') }
     history.value = [h, ...history.value].slice(0, 5)
     showToast(kind === 'deny' ? 'error' : 'success', kind === 'deny' ? '未授权人员，已拒绝开门' : `欢迎回家，${r.name}`)
   }, 1800)
@@ -240,82 +240,14 @@ const doDelFace = async (faceId) => {
 }
 
 const fetchLogs = async () => {
-  try { const r = await api.getLogs({ page: 1, size: 5 }); history.value = (r.items||[]).filter(l=>l.action==='door_open'||l.action==='door_deny').map(l=>({id:l.id,pass:l.action==='door_open',name:l.operator,score:l.detail?.score?.toFixed(2)||'0.00',time:dayjs(l.ts).format('HH:mm')})) } catch {}
+  try { const r = await api.getLogs({ page: 1, size: 10 }); history.value = (r.items||[]).filter(l=>l.action==='door_open'||l.action==='door_deny').slice(0,5).map(l=>{
+    const kp = l.operator==='keypad' || l.detail?.method==='keypad'
+    return {id:l.id,pass:l.action==='door_open',name:kp?'键盘':l.operator,method:kp?'键盘':'人脸',score:l.detail?.score!=null?l.detail.score.toFixed(2):'--',time:dayjs(l.ts).format('HH:mm')}
+  }) } catch {}
 }
 
 onMounted(() => { fetchLogs(); fetchLib() })
 </script>
 
 <style scoped>
-.face-page { max-width: 1100px; margin: 0 auto }
-.face-tabs { display: flex; gap: 6px; margin-bottom: 18px }
-.ft { padding: 8px 18px; border-radius: 8px; border: 1px solid #e4e8ed; background: #ffffff; color: var(--text-secondary); cursor: pointer; font-size: 13px; font-family: inherit; transition: .15s }
-.ft.active { background: var(--accent-light); border-color: #e07b30; color: #e07b30 }
-.ft:hover:not(.active) { color: var(--text-primary); background: #f5f7fa }
-.card { background: #ffffff; border: 1px solid #e4e8ed; border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow-sm) }
-.card-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px }
-.verify-row { display: grid; grid-template-columns: 1fr 280px; gap: 18px; align-items: start }
-.verify-stage { min-height: 380px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 2px dashed #d0d5dd; border-radius: 14px; background: linear-gradient(135deg, #fefefe, #fafbfc); transition: border-color .2s }
-.verify-stage:hover { border-color: #e07b30 }
-.upload-zone { text-align: center; max-width: 480px }
-.upload-icon { width: 80px; height: 80px; border-radius: 50%; background: #fef6ed; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px }
-.upload-text { font-size: 14px; color: var(--text-primary); margin-bottom: 4px }
-.upload-hint { font-size: 11px; color: var(--text-muted); margin-bottom: 18px }
-.demo-cta { display: flex; gap: 8px; align-items: center; justify-content: center }
-.demo-label { font-size: 11px; color: var(--text-muted) }
-.btn-demo { padding: 6px 12px; border-radius: 7px; border: 1px solid; cursor: pointer; font-size: 11px; font-family: inherit; transition: .15s }
-.btn-demo:hover { filter: brightness(0.95) }
-.btn-pass { background: #e8f5ee; border-color: #a8d8be; color: #1a9a5c }
-.btn-deny { background: #fde8e7; border-color: #f4c4c1; color: #c4453b }
-.btn-noface { background: #f5f7fa; border-color: #d0d5dd; color: var(--text-secondary) }
-.scan-box { position: relative; width: 240px; height: 280px; border-radius: 14px; background: linear-gradient(135deg, #f5f7fa, #ffffff); border: 1px solid #e4e8ed; display: flex; align-items: center; justify-content: center; overflow: hidden }
-.scan-line { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, #e07b30, transparent); box-shadow: 0 0 12px #e07b30; animation: scanline 1.4s ease-in-out infinite alternate }
-.scan-c { position: absolute; width: 20px; height: 20px; border-color: #e07b30; border-style: solid }
-.tl { left: 10px; top: 10px; border-width: 2px 0 0 2px }
-.tr { right: 10px; top: 10px; border-width: 2px 2px 0 0 }
-.bl { left: 10px; bottom: 10px; border-width: 0 0 2px 2px }
-.br { right: 10px; bottom: 10px; border-width: 0 2px 2px 0 }
-.scan-loader { position: absolute; bottom: 14px; display: flex; align-items: center; gap: 8px; color: #e07b30; font-size: 14px }
-.scan-spin { width: 14px; height: 14px; border: 2px solid #e07b30; border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; display: inline-block }
-.result-wrap { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 18px }
-.door-anim { position: relative; width: 200px; height: 120px; border-radius: 10px; overflow: hidden; background: #f5f7fa; border: 1px solid #e8f5ee }
-.door-left, .door-right { position: absolute; top: 0; bottom: 0; width: 50%; background: linear-gradient(135deg, #e8f5ee, #f5faf7) }
-.door-left { left: 0; border-right: 1px solid #a8d8be; animation: doorL 1.4s cubic-bezier(.7,0,.3,1) forwards }
-.door-right { right: 0; border-left: 1px solid #a8d8be; animation: doorR 1.4s cubic-bezier(.7,0,.3,1) forwards }
-.door-lock { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center }
-.pass-info { display: flex; align-items: center; gap: 10px }
-.pass-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #fef6ed, #fef3e8); display: flex; align-items: center; justify-content: center; border: 2px solid #2dbd7a; flex-shrink: 0 }
-.pass-title { font-size: 18px; font-weight: 700; color: #1a9a5c }
-.pass-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px }
-.pass-score { font-family: 'JetBrains Mono', monospace; color: #e07b30; font-variant-numeric: tabular-nums }
-.btn-reset { margin-top: 12px; padding: 7px 16px; border-radius: 8px; border: 1px solid #e4e8ed; background: #ffffff; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-family: inherit; transition: border-color .15s }
-.btn-reset:hover { border-color: #c0c8d4; color: var(--text-primary) }
-.deny-card { display: flex; gap: 14px; padding: 18px; border-radius: 12px; background: #fde8e7; border: 1px solid #f9d6d3; align-items: center; max-width: 400px; flex-wrap: wrap }
-.deny-avatar { width: 56px; height: 56px; border-radius: 10px; background: linear-gradient(135deg, #fef0ef, #fde8e7); border: 1px solid #f4c4c1; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0 }
-.deny-title { font-size: 16px; font-weight: 700; color: #c4453b; display: flex; align-items: center; gap: 6px }
-.deny-sub { font-size: 11px; color: #a87673; margin-top: 4px }
-.deny-score { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums }
-.deny-push { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px }
-.noface-block { display: flex; flex-direction: column; align-items: center; gap: 14px }
-.noface-icon { width: 64px; height: 64px; border-radius: 50%; background: #f5f7fa; display: flex; align-items: center; justify-content: center; border: 1px solid #e4e8ed }
-.noface-text { font-size: 14px; color: var(--text-primary) }
-.history-card { display: flex; flex-direction: column; gap: 8px }
-.h-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; background: #fafbfc; border: 1px solid #f0f2f5 }
-.h-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0 }
-.h-label { font-size: 12px; font-weight: 500 }
-.h-meta { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums }
-.lib-page { display: flex; flex-direction: column; gap: 14px }
-.lib-group { padding: 15px 16px }
-.lib-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px }
-.lib-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
-.lib-name { font-size: 14px; font-weight: 700 }
-.lib-role { font-size: 10px; padding: 2px 7px; border-radius: 5px }
-.lib-count { font-size: 11px; color: var(--text-muted) }
-.lib-add { margin-left: auto; padding: 5px 12px; border-radius: 7px; border: 1px dashed #d0d5dd; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 11px; font-family: inherit; transition: .15s }
-.lib-add:hover { color: var(--text-primary); border-color: #8a95a5 }
-.lib-faces { display: flex; flex-wrap: wrap; gap: 10px }
-.lib-face { position: relative; width: 90px; height: 110px; border-radius: 10px; overflow: hidden; background: linear-gradient(135deg, #f5f7fa, #fafbfc); border: 1px solid #e4e8ed; display: flex; align-items: center; justify-content: center }
-.lib-img { width: 100%; height: 100%; object-fit: cover }
-.lib-ph-svg { opacity: .3 }
-.lib-del { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 6px; border: none; background: rgba(229, 84, 75, 0.9); color: #fff; cursor: pointer; font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center }
 </style>

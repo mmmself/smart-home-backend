@@ -44,11 +44,23 @@
       </svg>
     </div>
 
+    <div class="card access-card">
+      <div class="card-title">门禁事件时间线</div>
+      <div class="ae-row ae-header"><span></span><span>时间</span><span>事件</span><span>方式</span><span>操作者</span></div>
+      <div v-for="e in accessEvents" :key="e.id" class="ae-row">
+        <span class="ae-dot" :style="{background:e.pass?'#46b98a':'#e5544b'}"></span>
+        <span class="ae-time">{{ e.time }}</span>
+        <span class="ae-action" :style="{color:e.pass?'#46b98a':'#e5544b'}">{{ e.pass ? '开门通过' : '门禁拒绝' }}</span>
+        <span class="ae-method" :style="{color:e.method==='键盘'?'#5bd0e0':'#f2a950'}">{{ e.method }}</span>
+        <span class="ae-operator">{{ e.operator }}</span>
+      </div>
+      <EmptyState v-if="!accessEvents.length" icon="lock" text="暂无门禁事件" />
+    </div>
+
     <div class="card changes-card">
       <div class="card-title">状态变化</div>
-      <div class="ch-row ch-header">
-        <span>时间</span><span>设备</span><span>变化</span><span>触发者</span>
-      </div>
+      <div class="na-note">门窗磁状态: N/A（无门窗磁硬件）</div>
+      <div class="ch-row ch-header"><span>时间</span><span>设备</span><span>变化</span><span>触发者</span></div>
       <div v-for="c in changes" :key="c.id" class="ch-row">
         <span class="ch-time">{{ c.date }} {{ c.time }}</span>
         <span>
@@ -77,6 +89,7 @@ const range = ref('24h')
 const interval = ref('1h')
 const chartData = ref([])
 const changes = ref([])
+const accessEvents = ref([])
 
 const metrics = [{key: 'temperature', label: '温度'}, {key: 'humidity', label: '湿度'}]
 const ranges = [{key: '24h', label: '近 24h'}, {key: '7d', label: '近 7 天'}, {key: 'today', label: '今天'}]
@@ -144,7 +157,17 @@ const fetchChanges = async () => {
 }
 const actionLabel = (a) => ({ door_open: '开门通过', door_deny: '门禁拒绝', light_on: '开灯', light_off: '关灯', fan_auto_on: '风扇自启(高温)', fan_auto_off: '风扇自停(降温)', scene_away: '离家模式', scene_home: '回家模式', scene_night: '睡眠模式' }[a] || a)
 
-onMounted(() => { fetchHistory(); fetchChanges() })
+const fetchAccessEvents = async () => {
+  try { const r = await api.getLogs({ page: 1, size: 30 }); setOnline(true)
+    accessEvents.value = (r.items||[]).filter(l => l.action==='door_open'||l.action==='door_deny').slice(0,10).map(l => {
+      const isKeypad = l.operator==='keypad' || l.detail?.method==='keypad'
+      const ts = l.ts ? dayjs(l.ts) : dayjs()
+      return { id:l.id, pass:l.action==='door_open', time:ts.format('MM-DD HH:mm'), method:isKeypad?'键盘':'人脸', operator:isKeypad?'键盘':'陌生人'===l.operator?'陌生人':(l.operator||'--') }
+    })
+  } catch {}
+}
+
+onMounted(() => { fetchHistory(); fetchChanges(); fetchAccessEvents() })
 </script>
 
 <style scoped>

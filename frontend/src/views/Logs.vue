@@ -17,8 +17,11 @@
         <span class="l-time">{{ formatTime(l.ts) }}</span>
         <span><span :class="['action-tag', l.action]">{{ actionLabel(l.action) }}</span></span>
         <span>{{ l.target || '--' }}</span>
-        <span>{{ l.operator || '--' }}</span>
-        <span class="l-detail" @click="showDetail = l === showDetail ? null : l">{{ detailText(l) }}</span>
+        <span>
+          <span v-if="isDoorEvent(l)" class="method-tag" :class="isKeypad(l)?'keypad':'face'">{{ isKeypad(l)?'键盘':'人脸' }}</span>
+          {{ l.operator === 'keypad' ? '' : (l.operator || '--') }}
+        </span>
+        <span class="l-detail" @click="showDetail=l===showDetail?null:l">{{ detailText(l) }}</span>
       </div>
       <div v-if="showDetail" class="detail-panel">
         <pre>{{ JSON.stringify(showDetail, null, 2) }}</pre>
@@ -68,6 +71,8 @@ const formatTime = (t) => t ? dayjs(t).format('YYYY-MM-DD HH:mm:ss') : ''
 const actionLabel = (a) => ({ door_open: '开门通过', door_deny: '门禁拒绝', light_on: '开灯', light_off: '关灯', ac_on: '开空调', ac_off: '关空调', fan_auto_on: '风扇自启', fan_auto_off: '风扇自停(降温)', scene_away: '离家', scene_home: '回家', scene_night: '睡眠', linkage_light_on: '联动开灯' }[a] || a)
 const actionOptions = Object.entries({ door_open: '开门通过', door_deny: '门禁拒绝', light_on: '开灯', light_off: '关灯', fan_auto_on: '风扇自启', fan_auto_off: '风扇自停(降温)' }).map(([v, l]) => ({value: v, label: l}))
 const detailText = (l) => l.detail && Object.keys(l.detail).length ? '查看详情 ▸' : '-'
+const isDoorEvent = (l) => l.action === 'door_open' || l.action === 'door_deny'
+const isKeypad = (l) => l.operator === 'keypad' || l.detail?.method === 'keypad'
 
 const fetchList = async () => {
   const params = { page: page.value, size: pageSize }
@@ -87,29 +92,4 @@ onMounted(fetchList)
 </script>
 
 <style scoped>
-.logs-page { max-width: 1100px; margin: 0 auto }
-.filter-bar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center }
-.fb-sel { padding: 7px 10px; border-radius: 7px; border: 1px solid #e4e8ed; background: #ffffff; color: var(--text-primary); font-size: 12px; font-family: inherit; outline: none }
-.fb-date { padding: 7px 10px; border-radius: 7px; border: 1px solid #e4e8ed; background: #ffffff; color: var(--text-primary); font-size: 12px; font-family: inherit; outline: none }
-.btn-query { padding: 7px 18px; border-radius: 7px; border: none; background: #e07b30; color: #ffffff; cursor: pointer; font-size: 12px; font-weight: 500; font-family: inherit; transition: background .15s }
-.btn-query:hover { background: #c96a25 }
-.card { background: #ffffff; border: 1px solid #e4e8ed; border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow-sm) }
-.l-header, .l-row { display: grid; grid-template-columns: 170px 100px 80px 120px 1fr; gap: 10px; align-items: center; padding: 9px 6px; border-bottom: 1px solid #f0f2f5; font-size: 12px }
-.l-header { font-size: 10px; color: var(--text-muted); padding-bottom: 6px }
-.l-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums }
-.action-tag { padding: 2px 7px; border-radius: 4px; font-size: 10px }
-.action-tag.door_deny { background: rgba(229, 84, 75, 0.1); color: #e5544b }
-.action-tag.door_open { background: rgba(45, 189, 122, 0.1); color: #2dbd7a }
-.action-tag.fan_auto_on, .action-tag.fan_auto_off { background: rgba(91, 208, 224, 0.1); color: #5bd0e0 }
-.action-tag.scene_away, .action-tag.scene_home, .action-tag.scene_night { background: rgba(91, 141, 239, 0.1); color: #5b8def }
-.action-tag.light_on, .action-tag.light_off, .action-tag.ac_on, .action-tag.ac_off, .action-tag.linkage_light_on { background: rgba(224, 123, 48, 0.1); color: #e07b30 }
-.l-detail { color: #5b8def; cursor: pointer; font-size: 11px }
-.detail-panel { background: #fafbfc; border: 1px solid #e4e8ed; border-radius: 10px; padding: 14px; margin-top: 10px; position: relative }
-.detail-panel pre { font-size: 11px; color: var(--text-secondary); white-space: pre-wrap; margin: 0 }
-.btn-close { position: absolute; top: 8px; right: 10px; padding: 2px 8px; border-radius: 4px; border: 1px solid #e4e8ed; background: #ffffff; color: var(--text-muted); cursor: pointer; font-size: 10px }
-.pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px }
-.page-btn { padding: 4px 10px; border-radius: 5px; border: 1px solid #e4e8ed; background: #ffffff; color: var(--text-secondary); cursor: pointer; font-size: 11px; transition: .15s }
-.page-btn:hover:not(.active):not(.ellipsis) { border-color: #c0c8d4; color: var(--text-primary) }
-.page-btn.active { background: var(--accent-light); border-color: #e07b30; color: #e07b30 }
-.page-btn.ellipsis { cursor: default; border-color: transparent; background: transparent }
 </style>

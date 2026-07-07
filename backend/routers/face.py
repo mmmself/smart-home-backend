@@ -5,6 +5,7 @@ from ..models import Person, Face, OpLog
 from ..services.face_service import get_embedding, add_embedding_cache, remove_embedding_cache, _rebuild_matrix
 from ..services.notify import push_stranger
 from ..services.upload import validate_upload
+from ..services.device_service import apply_device_state
 from ..schemas import resp
 from ..config import FACE_THRESHOLD
 import os
@@ -116,6 +117,10 @@ def verify(
             detail={"score": best_score, "face_id": best_face.id},
         ))
         db.commit()
+        apply_device_state(db, "door01", {"open": True},
+                           action="door_open", operator=matched_person.name)
+        apply_device_state(db, "display01", {"text": f"Welcome {matched_person.name}"},
+                           action="oled", operator="system")
         return resp({
             "pass": True,
             "score": best_score,
@@ -130,6 +135,8 @@ def verify(
             detail={"score": best_score, "reason": deny_reason or "low_score"},
         ))
         db.commit()
+        apply_device_state(db, "display01", {"text": "Access Denied"},
+                           action="oled", operator="system")
         notified = push_stranger(snapshot_url, best_score)
         return resp({
             "pass": False,

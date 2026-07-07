@@ -34,7 +34,7 @@
               <span class="dev-icon" :style="{background: lightIconBg}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" :stroke="lightStroke" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 12 3Z"/></svg>
               </span>
-              <div><div class="dev-name">客厅灯</div><div class="dev-sub">亮度 {{ lightBr }}%</div></div>
+              <div><div class="dev-name" style="display:flex;align-items:center;gap:6px">客厅灯<span class="logical-tag">逻辑演示</span></div><div class="dev-sub">亮度 {{ lightBr }}% · 无物理灯</div></div>
             </div>
             <div class="toggle" :class="{on: lightOn}" @click="onDevice('light01', {on: !lightOn})"><span class="toggle-knob"></span></div>
           </div>
@@ -317,58 +317,4 @@ onUnmounted(() => { clearInterval(sensorTimer); clearInterval(eventTimer); clear
 </script>
 
 <style scoped>
-.dash { max-width: 1560px; margin: 0 auto }
-.dash-grid { display: grid; grid-template-columns: 308px minmax(0, 1fr) 300px; gap: 16px; align-items: start }
-.col-l, .col-c, .col-r { display: flex; flex-direction: column; gap: 14px }
-.sensor-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
-.sensor-card { background: #ffffff; border: 1px solid #e4e8ed; border-radius: 14px; padding: 14px 15px 10px; box-shadow: var(--shadow-sm) }
-.sc-top { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-secondary) }
-.sc-val { font-family: 'JetBrains Mono', monospace; font-size: 31px; font-weight: 700; line-height: 1; margin-top: 4px; font-variant-numeric: tabular-nums }
-.sc-unit { font-size: 13px; color: var(--text-muted); margin-left: 2px }
-.spark { width: 100%; height: 28px; margin-top: 6px }
-.card { background: #ffffff; border: 1px solid #e4e8ed; border-radius: 14px; padding: 15px; box-shadow: var(--shadow-sm) }
-.card-title { font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px }
-.dev-row { border: 1px solid #e4e8ed; border-radius: 11px; padding: 11px 12px; background: #fafbfc; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between }
-.dev-info { display: flex; align-items: center; gap: 8px }
-.dev-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
-.dev-icon-sm { width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0 }
-.dev-name { font-weight: 500; font-size: 13px; color: var(--text-primary) }
-.dev-sub { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums }
-.toggle { width: 42px; height: 24px; border-radius: 12px; background: #e4e8ed; cursor: pointer; position: relative; transition: .2s; flex-shrink: 0; border: 1px solid #d0d5dd }
-.toggle.on { background: #e07b30; border-color: #e07b30 }
-.toggle-knob { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #ffffff; transition: .2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15) }
-.toggle.on .toggle-knob { left: 20px }
-.slider { width: 100%; margin-top: 0; margin-bottom: 8px; height: 4px; accent-color: #e07b30 }
-.ac-stepper { display: flex; align-items: center; gap: 2px; background: #f5f7fa; border: 1px solid #e4e8ed; border-radius: 8px; padding: 2px }
-.ac-btn { width: 22px; height: 22px; border: none; background: transparent; color: var(--text-secondary); font-size: 14px; cursor: pointer; border-radius: 6px; font-family: inherit }
-.ac-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; width: 32px; text-align: center; font-variant-numeric: tabular-nums }
-.auto-tag { font-size: 9px; color: #b07a2a; border: 1px solid #f0d9c0; background: #fef6ed; padding: 1px 5px; border-radius: 5px; font-weight: 400 }
-.dev-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
-.dev-mini { border: 1px solid #e4e8ed; border-radius: 11px; padding: 10px 11px; background: #fafbfc }
-.mini-status { font-size: 11px; color: var(--text-primary); margin-bottom: 3px }
-.mini-sub { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums }
-.fp-card { position: relative }
-.fp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px }
-.fp-header .card-title { margin-bottom: 0 }
-.fp-scene { font-size: 10px; color: var(--text-muted) }
-.fp-svg { width: 100%; height: auto; display: block }
-.chart-card { padding-bottom: 12px }
-.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px }
-.chart-header .card-title { margin-bottom: 0 }
-.chart-legend { display: flex; gap: 12px; font-size: 10px; color: var(--text-secondary) }
-.chart-svg { width: 100%; height: auto; display: block }
-.chart-ticks { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-muted); margin-top: 2px; font-variant-numeric: tabular-nums }
-.event-card { display: flex; flex-direction: column; max-height: 390px }
-.event-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid #f0f2f5 }
-.event-poll { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 4px }
-.poll-dot { width: 5px; height: 5px; border-radius: 50%; background: #2dbd7a; box-shadow: 0 0 5px #2dbd7a }
-.event-list { flex: 1; overflow-y: auto; padding: 6px 0 }
-.event-item { padding: 8px 10px; border-left: 3px solid #e4e8ed; margin: 2px 0; font-size: 12px; display: flex; justify-content: space-between; align-items: center; background: #fafbfc; border-radius: 0 8px 8px 0 }
-.event-time { font-size: 10px; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0 }
-.event-empty { text-align: center; padding: 30px 0; color: var(--text-muted); font-size: 12px }
-.yolo-card { cursor: pointer; transition: border-color .15s }
-.yolo-card:hover { border-color: #c0c8d4 }
-.yolo-thumb { border-radius: 11px; overflow: hidden; aspect-ratio: 16/10; background: linear-gradient(135deg, #f5f7fa, #fafbfc); border: 1px solid #e4e8ed }
-.yolo-placeholder { position: relative; border-radius: 11px; overflow: hidden; aspect-ratio: 16/10; background: linear-gradient(135deg, #f5f7fa, #fafbfc); border: 1px solid #e4e8ed; display: flex; flex-direction: column; align-items: center; justify-content: center }
-.yolo-box { position: absolute }
 </style>
