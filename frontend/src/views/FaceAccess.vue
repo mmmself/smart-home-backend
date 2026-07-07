@@ -75,7 +75,7 @@
         <div class="card-title">最近 5 次验证</div>
         <div v-for="h in history" :key="h.id" class="h-item">
           <span class="h-dot" :style="{background:h.pass?'#46b98a':'#e5544b'}"></span>
-          <div style="flex:1"><div class="h-label" :style="{color:h.pass?'#46b98a':'#e5544b'}">{{ h.pass ? (h.name||'通过') : '拒绝' }}</div><div class="h-meta">相似度 {{ h.score }} · {{ h.time }}</div></div>
+          <div style="flex:1"><div class="h-label" :style="{color:h.pass?'#46b98a':'#e5544b'}">{{ h.pass ? (h.name||'通过') : '拒绝' }}</div><div class="h-meta"><span class="h-method" :style="{color:h.method==='键盘'?'#5bd0e0':'#f2a950'}">{{ h.method }}</span> · {{ h.score!=='--' ? '相似度 '+h.score+' · ' : '' }}{{ h.time }}</div></div>
         </div>
         <EmptyState v-if="!history.length" icon="clock" text="暂无验证记录" />
       </div>
@@ -131,7 +131,7 @@ const doUpload = async () => {
     setOnline(true)
     result.value = d
     state.value = d.pass ? 'pass' : 'deny'
-    const h = { id: Date.now(), pass: d.pass, name: d.person?.name, score: d.score?.toFixed(2) || '0.00', time: dayjs().format('HH:mm') }
+    const h = { id: Date.now(), pass: d.pass, name: d.person?.name, method:'人脸', score: d.score?.toFixed(2) || '0.00', time: dayjs().format('HH:mm') }
     history.value = [h, ...history.value].slice(0, 5)
     showToast(d.pass ? 'success' : 'error', d.pass ? `欢迎回家${d.person?.name ? '，'+d.person.name : ''}` : '未授权人员，已拒绝开门')
   } catch (e) {
@@ -152,7 +152,7 @@ const simVerify = (kind) => {
     if (kind === 'noface') { state.value = 'noface'; showToast('info', '未检测到人脸'); return }
     const r = kind === 'deny' ? { pass: false, score: 0.21 } : { pass: true, name: '张三', score: 0.87 }
     result.value = r; state.value = kind === 'deny' ? 'deny' : 'pass'
-    const h = { id: Date.now(), pass: r.pass, name: r.name, score: r.score.toFixed(2), time: dayjs().format('HH:mm') }
+    const h = { id: Date.now(), pass: r.pass, name: r.name, method:'人脸', score: r.score.toFixed(2), time: dayjs().format('HH:mm') }
     history.value = [h, ...history.value].slice(0, 5)
     showToast(kind === 'deny' ? 'error' : 'success', kind === 'deny' ? '未授权人员，已拒绝开门' : `欢迎回家，${r.name}`)
   }, 1800)
@@ -179,7 +179,10 @@ const doDelFace = async (faceId) => {
 }
 
 const fetchLogs = async () => {
-  try { const r = await api.getLogs({ page: 1, size: 5 }); history.value = (r.items||[]).filter(l=>l.action==='door_open'||l.action==='door_deny').map(l=>({id:l.id,pass:l.action==='door_open',name:l.operator,score:l.detail?.score?.toFixed(2)||'0.00',time:dayjs(l.ts).format('HH:mm')})) } catch {}
+  try { const r = await api.getLogs({ page: 1, size: 10 }); history.value = (r.items||[]).filter(l=>l.action==='door_open'||l.action==='door_deny').slice(0,5).map(l=>{
+    const kp = l.operator==='keypad' || l.detail?.method==='keypad'
+    return {id:l.id,pass:l.action==='door_open',name:kp?'键盘':l.operator,method:kp?'键盘':'人脸',score:l.detail?.score!=null?l.detail.score.toFixed(2):'--',time:dayjs(l.ts).format('HH:mm')}
+  }) } catch {}
 }
 
 onMounted(() => { fetchLogs(); fetchLib() })
@@ -240,6 +243,7 @@ onMounted(() => { fetchLogs(); fetchLib() })
 .h-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .h-label{font-size:12px;font-weight:500}
 .h-meta{font-size:10px;color:#6b7686;font-variant-numeric:tabular-nums}
+.h-method{font-weight:500}
 .lib-page{display:flex;flex-direction:column;gap:14px}
 .lib-group{padding:15px 16px}
 .lib-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}

@@ -12,7 +12,10 @@
         <span class="l-time">{{ formatTime(l.ts) }}</span>
         <span><span :class="['action-tag',l.action]">{{ actionLabel(l.action) }}</span></span>
         <span>{{ l.target || '--' }}</span>
-        <span>{{ l.operator || '--' }}</span>
+        <span>
+          <span v-if="isDoorEvent(l)" class="method-tag" :class="isKeypad(l)?'keypad':'face'">{{ isKeypad(l)?'键盘':'人脸' }}</span>
+          {{ l.operator === 'keypad' ? '' : (l.operator || '--') }}
+        </span>
         <span class="l-detail" @click="showDetail=l===showDetail?null:l">{{ detailText(l) }}</span>
       </div>
       <div v-if="showDetail" class="detail-panel">
@@ -54,6 +57,8 @@ const formatTime = (t) => t ? dayjs(t).format('YYYY-MM-DD HH:mm:ss') : ''
 const actionLabel = (a) => ({ door_open:'开门通过', door_deny:'门禁拒绝', light_on:'开灯', light_off:'关灯', ac_on:'开空调', ac_off:'关空调', fan_auto_on:'风扇自启', fan_auto_off:'风扇自停(降温)', scene_away:'离家', scene_home:'回家', scene_night:'睡眠', linkage_light_on:'联动开灯' }[a] || a)
 const actionOptions = Object.entries({ door_open:'开门通过', door_deny:'门禁拒绝', light_on:'开灯', light_off:'关灯', fan_auto_on:'风扇自启', fan_auto_off:'风扇自停(降温)' }).map(([v,l])=>({value:v,label:l}))
 const detailText = (l) => l.detail && Object.keys(l.detail).length ? '查看详情 ▸' : '-'
+const isDoorEvent = (l) => l.action === 'door_open' || l.action === 'door_deny'
+const isKeypad = (l) => l.operator === 'keypad' || l.detail?.method === 'keypad'
 
 const fetchList = async () => {
   const params = { page: page.value, size: pageSize }
@@ -81,6 +86,9 @@ onMounted(fetchList)
 .action-tag.fan_auto_on,.action-tag.fan_auto_off{background:rgba(91,208,224,.15);color:#5bd0e0}
 .action-tag.scene_away,.action-tag.scene_home,.action-tag.scene_night{background:rgba(91,141,239,.15);color:#5b8def}
 .action-tag.light_on,.action-tag.light_off,.action-tag.ac_on,.action-tag.ac_off,.action-tag.linkage_light_on{background:rgba(242,169,80,.1);color:#f2a950}
+.method-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;margin-right:4px;vertical-align:middle}
+.method-tag.keypad{background:rgba(91,208,224,.15);color:#5bd0e0}
+.method-tag.face{background:rgba(242,169,80,.12);color:#f2a950}
 .l-detail{color:#5b8def;cursor:pointer;font-size:11px}
 .detail-panel{background:#141a23;border:1px solid #2a3442;border-radius:10px;padding:14px;margin-top:10px;position:relative}
 .detail-panel pre{font-size:11px;color:#8b95a3;white-space:pre-wrap;margin:0}
