@@ -13,3 +13,4 @@ onnxruntime
 paho-mqtt==2.*
 requests
 numpy
+pyserial
