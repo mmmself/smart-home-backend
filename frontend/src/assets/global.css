@@ -1,31 +1,61 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  --bg-primary: #0d1015;
-  --bg-secondary: #12171f;
-  --bg-card: #181f29;
-  --border-color: #1e2530;
-  --text-primary: #e9e6df;
-  --text-secondary: #8b95a3;
-  --text-muted: #6b7686;
-  --accent: #f2a950;
+  --bg-primary: #f5f7fa;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-hover: #f0f2f5;
+  --border-color: #e4e8ed;
+  --border-light: #edf0f3;
+  --text-primary: #1a2033;
+  --text-secondary: #4a5568;
+  --text-muted: #8a95a5;
+  --accent: #e07b30;
+  --accent-light: rgba(224, 123, 48, 0.1);
+  --accent-hover: #c96a25;
+  --success: #2dbd7a;
+  --success-light: rgba(45, 189, 122, 0.1);
+  --danger: #e5544b;
+  --danger-light: rgba(229, 84, 75, 0.1);
+  --info: #5b8def;
+  --info-light: rgba(91, 141, 239, 0.1);
+  --warning: #f2a950;
+  --warning-light: rgba(242, 169, 80, 0.1);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-*{box-sizing:border-box;margin:0;padding:0}
-html,body,#app{height:100%}
-body{font-family:'Noto Sans SC',system-ui,sans-serif;font-size:14px;background:#0d1015;color:#e9e6df}
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-thumb{background:#2a3442;border-radius:6px}
-::-webkit-scrollbar-track{background:transparent}
+* { box-sizing: border-box; margin: 0; padding: 0 }
+html, body, #app { height: 100% }
+body {
+  font-family: 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes scanline{0%{transform:translateY(0)}100%{transform:translateY(260px)}}
-@keyframes doorL{to{transform:translateX(-100%)}}
-@keyframes doorR{to{transform:translateX(100%)}}
-@keyframes shimmer{0%{background-position:-320px 0}100%{background-position:320px 0}}
-@keyframes denyFlash{0%,100%{opacity:0}25%,60%{opacity:.55}}
-@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fanSpin{to{transform:rotate(360deg)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important}}
+::-webkit-scrollbar { width: 6px; height: 6px }
+::-webkit-scrollbar-thumb { background: #d0d5dd; border-radius: 6px }
+::-webkit-scrollbar-track { background: transparent }
+::-webkit-scrollbar-thumb:hover { background: #b0b8c4 }
+
+::selection { background: rgba(224, 123, 48, 0.2); color: var(--text-primary) }
+
+@keyframes toastIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes scanline { 0% { transform: translateY(0); } 100% { transform: translateY(260px); } }
+@keyframes doorL { to { transform: translateX(-100%); } }
+@keyframes doorR { to { transform: translateX(100%); } }
+@keyframes shimmer { 0% { background-position: -320px 0; } 100% { background-position: 320px 0; } }
+@keyframes denyFlash { 0%, 100% { opacity: 0; } 25%, 60% { opacity: .55; } }
+@keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fanSpin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes bounceIn { 0% { transform: scale(0.9); opacity: 0; } 50% { transform: scale(1.02); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; } }

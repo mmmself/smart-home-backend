@@ -1,12 +1,15 @@
 <template>
   <div class="empty-state">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3a4757" :stroke-width="sw" stroke-linecap="round" stroke-linejoin="round" v-html="paths[icon] || paths.list"></svg>
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c0c8d4" :stroke-width="sw" stroke-linecap="round" stroke-linejoin="round" v-html="paths[icon] || paths.list"></svg>
     <div class="empty-text">{{ text }}</div>
   </div>
 </template>
 
 <script setup>
-defineProps({ icon: { type: String, default: 'list' }, text: { type: String, default: '暂无数据' } })
+defineProps({
+  icon: { type: String, default: 'list' },
+  text: { type: String, default: '暂无数据' }
+})
 const sw = 1.3
 const paths = {
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
@@ -19,6 +22,6 @@ const paths = {
 </script>
 
 <style scoped>
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px 12px}
-.empty-text{font-size:12px;color:#6b7686}
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 28px 12px }
+.empty-text { font-size: 12px; color: var(--text-muted) }
 </style>
