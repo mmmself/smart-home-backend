@@ -87,3 +87,9 @@ def stop_mqtt():
     if _client:
         _client.loop_stop()
         _client.disconnect()
+
+
+def reset_fan_auto():
+    global _fan_auto_on
+    _fan_auto_on = False
+    logger.info("风扇自动模式已重置(手动操作)")

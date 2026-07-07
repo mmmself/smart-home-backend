@@ -4,7 +4,10 @@
       <div class="upload-inner">
         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#5b8def" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
         <div class="upload-main">点击上传图片进行物体识别（YOLOv8）</div>
-        <div class="upload-sub">不做选择则运行示例推理</div>
+        <div class="upload-sub">支持 JPG / PNG，拖拽或点击上传</div>
+        <div class="demo-cta" style="margin-top:12px">
+          <button @click.stop="loadDemo" class="btn-demo">载入示例结果（演示）</button>
+        </div>
       </div>
       <div class="linkage-row">
         <div class="linkage-toggle" @click.stop="linkage=!linkage">
@@ -17,6 +20,12 @@
     <div v-if="state==='infer'" class="infer-row">
       <div class="shimmer-box"></div>
       <div class="shimmer-box infer-label"><div class="infer-loader"><span class="infer-spin"></span>推理中…</div></div>
+    </div>
+
+    <div v-if="state==='error'" class="card" style="text-align:center;padding:48px 20px">
+      <div style="width:64px;height:64px;border-radius:50%;background:#1c232e;display:flex;align-items:center;justify-content:center;border:1px solid #3a1c1a;margin:0 auto 14px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e5544b" stroke-width="1.5" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg></div>
+      <div style="font-size:14px;color:#f4a9a4;margin-bottom:16px">后端未连接，请检查服务后重试</div>
+      <button @click="state='idle'" class="btn-reset">重试</button>
     </div>
 
     <div v-if="state==='done' && result" class="done-page">
@@ -48,7 +57,7 @@
         <div class="card-title" style="margin-bottom:8px">历史识别</div>
         <div class="hist-list">
           <div v-for="h in history" :key="h.id" class="hist-item" @click="viewHist(h)">
-            <div class="hist-thumb"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-4 4 3 3-2 4 3"/></svg></div>
+            <div class="hist-thumb"><img v-if="h.annotated_url" :src="h.annotated_url" style="width:100%;height:100%;object-fit:cover" /><svg v-else width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.8"/><path d="M4 18l5-4 4 3 3-2 4 3"/></svg></div>
             <div class="hist-count">{{ h.detections?.length || 0 }} 目标</div>
           </div>
         </div>
@@ -75,7 +84,7 @@ const confColor = (c) => c > 0.7 ? '#46b98a' : c > 0.4 ? '#f2a950' : '#e5544b'
 
 const doDetect = async () => {
   const f = await picker('image/*')
-  if (!f) { simDetect(); return }
+  if (!f) return
   state.value = 'infer'; result.value = null
   try {
     const d = await api.detect(f, linkage.value ? 1 : 0)
@@ -83,19 +92,36 @@ const doDetect = async () => {
     result.value = d; state.value = 'done'
     history.value = [{id:Date.now(),...d}, ...history.value].slice(0,6)
     showToast('success', `识别完成，检出 ${d.detections?.length||0} 个目标`)
-  } catch { setOnline(false); simDetect() }
+  } catch (e) {
+    if (e.isBusiness) {
+      state.value = 'idle'
+      showToast('error', e.message)
+    } else {
+      setOnline(false)
+      state.value = 'error'
+      showToast('error', '后端未连接，识别未执行')
+    }
+  }
 }
 
-const simDetect = () => { state.value = 'infer'
+const loadDemo = () => {
+  state.value = 'infer'
   setTimeout(() => {
     const r = { image_url:'',annotated_url:'',detections:[{cls:'person',conf:0.92,box:[34,50,220,290]},{cls:'sofa',conf:0.81,box:[210,150,460,300]},{cls:'laptop',conf:0.74,box:[120,190,210,250]}] }
     result.value = r; state.value = 'done'
-    history.value = [{id:Date.now(),...r}, ...history.value].slice(0,6)
     showToast('success', `识别完成（演示），检出 3 个目标`)
   }, 1400)
 }
 
 const viewHist = (item) => { result.value = item; state.value = 'done' }
+
+const fetchHistory = async () => {
+  try {
+    const r = await api.getDetections({ page: 1, size: 6 })
+    history.value = (r.items || []).map(d => ({ id: d.id, image_url: d.image_url, annotated_url: d.annotated_url, detections: d.detections }))
+  } catch {}
+}
+onMounted(fetchHistory)
 </script>
 
 <style scoped>
@@ -106,6 +132,9 @@ const viewHist = (item) => { result.value = item; state.value = 'done' }
 .upload-inner{padding:40px;display:flex;flex-direction:column;align-items:center;gap:10px}
 .upload-main{font-size:14px;color:#c4ccd6}
 .upload-sub{font-size:11px;color:#6b7686}
+.demo-cta{display:flex;justify-content:center}
+.btn-demo{padding:6px 14px;border-radius:7px;border:1px dashed #3a4757;background:transparent;color:#8b95a3;cursor:pointer;font-size:11px;font-family:inherit}
+.btn-demo:hover{color:#c4ccd6;border-color:#4a5767}
 .linkage-row{display:flex;justify-content:center;padding:10px 0 6px}
 .linkage-toggle{display:flex;align-items:center;gap:8px;cursor:pointer}
 .lt-sw{width:38px;height:22px;border-radius:11px;background:#232c39;border:1px solid #2a3442;position:relative;transition:.2s;flex-shrink:0}
@@ -119,9 +148,11 @@ const viewHist = (item) => { result.value = item; state.value = 'done' }
 .infer-label{display:flex;align-items:center;justify-content:center}
 .infer-loader{display:flex;align-items:center;gap:8px;color:#5b8def;font-size:13px}
 .infer-spin{width:14px;height:14px;border:2px solid #5b8def;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
-.btn-reset{padding:7px 14px;border-radius:8px;border:1px solid #2a3442;background:#1c232e;color:#b9c1cd;cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:6px}
+.btn-reset{padding:7px 14px;border-radius:8px;border:1px solid #2a3442;background:#1c232e;color:#b9c1cd;cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:6px;transition:border-color .15s}
+.btn-reset:hover{border-color:#33404f;color:#e9e6df}
 .compare-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.img-card{cursor:zoom-in}
+.img-card{cursor:zoom-in;transition:border-color .15s}
+.img-card:hover{border-color:#33404f}
 .img-label{font-size:11px;color:#98a2b0;margin-bottom:8px;display:flex;justify-content:space-between}
 .img-hint{color:#6b7686}
 .img-wrap{border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#2a3442,#141a23);min-height:150px;display:flex;align-items:center;justify-content:center}
@@ -134,6 +165,7 @@ const viewHist = (item) => { result.value = item; state.value = 'done' }
 .box-text{font-family:'JetBrains Mono',monospace;font-size:10px;color:#8b95a3;font-variant-numeric:tabular-nums}
 .hist-strip{margin-top:0}
 .hist-list{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
-.hist-item{position:relative;flex-shrink:0;width:140px;aspect-ratio:16/10;border-radius:9px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,#1e2732,#151b23);border:1px solid #2a3442;display:flex;align-items:center;justify-content:center}
+.hist-item{position:relative;flex-shrink:0;width:140px;aspect-ratio:16/10;border-radius:9px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,#1e2732,#151b23);border:1px solid #2a3442;display:flex;align-items:center;justify-content:center;transition:border-color .15s}
+.hist-item:hover{border-color:#33404f}
 .hist-count{position:absolute;right:5px;bottom:5px;font-size:9px;color:#c4ccd6;background:rgba(13,16,21,.7);padding:1px 6px;border-radius:5px}
 </style>

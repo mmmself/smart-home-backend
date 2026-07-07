@@ -13,7 +13,7 @@
       </nav>
       <div class="nav-footer">
         <span class="dot" :style="{background:conColor,boxShadow:`0 0 8px ${conColor}`}"></span>
-        <span>{{ online === true ? '后端已连接' : online === false ? '演示模式' : '检测中…' }}</span>
+        <span>{{ online === true ? '后端已连接' : online === false ? '离线' : '检测中…' }}</span>
       </div>
     </aside>
     <main class="main">
@@ -26,6 +26,10 @@
           </div>
         </div>
       </header>
+      <div v-if="online === false" class="offline-banner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f4a9a4" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>后端服务未连接 — 页面数据可能不是最新</span>
+      </div>
       <div class="page-body">
         <RouterView v-slot="{ Component }">
           <component :is="Component" :key="$route.path" :online="online" :setOnline="setOnline" :showToast="showToast" :confirm="showConfirm" :lightbox="showLightbox" :picker="pickFile" />
@@ -81,6 +85,7 @@ const toasts = ref([])
 const confirmData = ref(null)
 const lightboxData = ref(null)
 const sceneActive = ref('')
+provide('sceneActive', sceneActive)
 let _tid = 0, clockTimer = null, sensorTimer = null
 
 const conColor = computed(() => online.value === true ? '#46b98a' : online.value === false ? '#f2a950' : '#6b7686')
@@ -133,8 +138,16 @@ const fetchConnect = async () => {
   try { await api.getDevices(); online.value = true } catch { online.value = false }
 }
 
+const restoreScene = async () => {
+  try {
+    const r = await api.getLogs({ page: 1, size: 50 })
+    const last = (r.items || []).find(l => typeof l.action === 'string' && l.action.startsWith('scene_'))
+    if (last) sceneActive.value = last.action.replace('scene_', '')
+  } catch {}
+}
+
 onMounted(() => {
-  fetchConnect(); sensorTimer = setInterval(fetchConnect, 15000)
+  fetchConnect(); restoreScene(); sensorTimer = setInterval(fetchConnect, 15000)
   clockTimer = setInterval(() => {
     const n = dayjs(); clock.value = n.format('HH:mm:ss'); dateStr.value = n.format('YYYY年MM月DD日 dddd')
   }, 1000)
@@ -173,6 +186,7 @@ nav{flex:1;padding:6px 10px;display:flex;flex-direction:column;gap:2px}
 .topbar-left h1{margin:0;font-size:16px;font-weight:700}
 .topbar-sub{font-size:11px;color:#6b7686}
 .topbar-right{display:flex;align-items:center;gap:16px}
+.offline-banner{display:flex;align-items:center;justify-content:center;gap:8px;height:34px;flex-shrink:0;background:rgba(229,84,75,.08);border-bottom:1px solid rgba(229,84,75,.3);color:#f4a9a4;font-size:12px;animation:fadeIn .2s ease}
 .clock-block{text-align:right}
 .clock-time{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:500;letter-spacing:.5px;font-variant-numeric:tabular-nums}
 .clock-date{font-size:10px;color:#6b7686;font-variant-numeric:tabular-nums}

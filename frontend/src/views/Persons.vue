@@ -19,9 +19,9 @@
           <button @click="doDel(p.id)" class="btn-sm btn-del">删除</button>
         </span>
       </div>
-      <div v-if="!list.length" style="text-align:center;padding:30px;color:#6b7686">暂无人员</div>
-      <div v-if="total > pageSize" style="display:flex;justify-content:center;gap:6px;margin-top:12px">
-        <button v-for="i in Math.ceil(total/pageSize)" :key="i" :class="['page-btn',{active:page===i}]" @click="page=i;fetchList()">{{ i }}</button>
+      <EmptyState v-if="!list.length" icon="person" text="暂无人员" />
+      <div v-if="total > pageSize" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:12px">
+        <span v-for="(p,i) in pageItems" :key="i" :class="['page-btn',{active:page===p,ellipsis:p==='…'}]" @click="typeof p==='number'?(page=p,fetchList()):''">{{ p }}</span>
       </div>
     </div>
 
@@ -43,8 +43,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { api } from '../api'
+import EmptyState from '../components/EmptyState.vue'
 import dayjs from 'dayjs'
 
 const props = defineProps(['online', 'setOnline', 'showToast', 'confirm'])
@@ -52,6 +53,16 @@ const { showToast, setOnline } = props
 
 const keyword = ref(''); const page = ref(1); const pageSize = 10
 const total = ref(0); const list = ref([])
+const pageItems = computed(() => {
+  const n = Math.ceil(total.value / pageSize); const p = page.value
+  if (n <= 7) return Array.from({ length: n }, (_, i) => i + 1)
+  const items = [1]; const start = Math.max(2, p - 1); const end = Math.min(n - 1, p + 1)
+  if (start > 2) items.push('…')
+  for (let i = start; i <= end; i++) items.push(i)
+  if (end < n - 1) items.push('…')
+  items.push(n)
+  return items
+})
 const drawer = ref(false); const editingId = ref(null)
 const form = ref({ name: '', phone: '', role: 'family', is_active: true })
 
@@ -98,8 +109,10 @@ onMounted(fetchList)
 .role-tag.owner{background:#2a2113;color:#f2a950}
 .role-tag.family{background:#182a22;color:#46b98a}
 .role-tag.guest{background:#1c232e;color:#98a2b0}
-.page-btn{padding:4px 10px;border-radius:5px;border:1px solid #2a3442;background:#1c232e;color:#8b95a3;cursor:pointer;font-size:11px}
+.page-btn{padding:4px 10px;border-radius:5px;border:1px solid #2a3442;background:#1c232e;color:#8b95a3;cursor:pointer;font-size:11px;transition:.15s}
+.page-btn:hover:not(.active):not(.ellipsis){border-color:#33404f;color:#e9e6df}
 .page-btn.active{background:rgba(242,169,80,.1);border-color:#f2a950;color:#f2a950}
+.page-btn.ellipsis{cursor:default;border-color:transparent;background:transparent}
 .drawer-overlay{position:fixed;inset:0;z-index:80;background:rgba(6,8,11,.5);display:flex;justify-content:flex-end}
 .drawer{width:360px;height:100%;background:#181f29;border-left:1px solid #2a3442;padding:24px;overflow-y:auto}
 .drawer h3{margin:0 0 18px;font-size:16px}
@@ -107,7 +120,8 @@ onMounted(fetchList)
 .form-group label{display:block;font-size:11px;color:#8b95a3;margin-bottom:4px}
 .form-inp{width:100%;padding:8px 10px;border-radius:7px;border:1px solid #2a3442;background:#141a23;color:#e9e6df;font-size:13px;font-family:inherit;outline:none}
 .role-options{display:flex;gap:6px}
-.role-opt{padding:5px 12px;border-radius:6px;border:1px solid #2a3442;background:#1c232e;color:#8b95a3;cursor:pointer;font-size:12px;font-family:inherit}
+.role-opt{padding:5px 12px;border-radius:6px;border:1px solid #2a3442;background:#1c232e;color:#8b95a3;cursor:pointer;font-size:12px;font-family:inherit;transition:.15s}
+.role-opt:hover:not(.active){border-color:#33404f;color:#e9e6df}
 .role-opt.active{border-color:#f2a950;color:#f2a950;background:rgba(242,169,80,.1)}
 .toggle-sm{width:38px;height:22px;border-radius:11px;background:#232c39;display:inline-block;position:relative;cursor:pointer;border:1px solid #2a3442;transition:.2s}
 .toggle-sm.on{background:#f2a950;border-color:#f2a950}

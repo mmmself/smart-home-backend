@@ -64,7 +64,7 @@
               </span>
               <div class="dev-name" style="display:flex;align-items:center;gap:6px">风扇<span v-if="fanAuto" class="auto-tag">自动</span></div>
             </div>
-            <div class="toggle" :class="{on:fanOn}" @click="onDevice('fan01',{on:!fanOn})"><span class="toggle-knob"></span></div>
+            <div class="toggle" :class="{on:fanOn}" @click="onDevice('fan01',{on:!fanOn,auto:false})"><span class="toggle-knob"></span></div>
           </div>
 
           <!-- Door + Window -->
@@ -151,15 +151,17 @@
               <span class="event-kind" :style="{color:ev.color,fontWeight:ev.bold?700:400}">{{ ev.text }}</span>
               <span class="event-time">{{ ev.time }}</span>
             </div>
-            <div v-if="!events.length" class="event-empty">暂无事件 — 等待传感器数据</div>
+            <EmptyState v-if="!events.length" icon="clock" text="暂无事件 — 等待传感器数据" />
           </div>
         </div>
 
-        <div class="card yolo-card" @click="lightbox({caption:'最近一次识别标注'})">
+        <div class="card yolo-card" @click="lastDetection ? lightbox({caption:'最近一次识别标注', src: lastDetection.annotated_url}) : null">
           <div class="card-title" style="margin-bottom:8px">最近一次识别标注</div>
-          <div class="yolo-placeholder">
-            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#3a4757" stroke-width="1.2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.2-3.6 4-5.2 7-5.2s5.8 1.6 7 5.2"/></svg>
-            <div class="yolo-box" style="left:22%;top:14%;width:34%;height:70%;border:2px solid #46b98a;border-radius:4px"><span style="position:absolute;top:-19px;left:-1px;background:#46b98a;color:#08130d;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px 4px 4px 0">人 0.92</span></div>
+          <div v-if="lastDetection" class="yolo-thumb">
+            <img v-if="lastDetection.annotated_url" :src="lastDetection.annotated_url" style="width:100%;height:100%;object-fit:cover" />
+          </div>
+          <div v-else class="yolo-placeholder">
+            <EmptyState icon="frame" text="暂无识别记录" />
           </div>
         </div>
       </div>
@@ -168,8 +170,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, inject } from 'vue'
 import { api } from '../api'
+import EmptyState from '../components/EmptyState.vue'
 import dayjs from 'dayjs'
 
 const props = defineProps(['online', 'setOnline', 'showToast', 'lightbox'])
@@ -181,7 +184,8 @@ const events = ref([])
 const legend = reactive({ temp: true, hum: true })
 const history = ref([])
 const denyFlash = ref(0)
-let sensorTimer, eventTimer, _evN = 0
+const lastDetection = ref(null)
+let sensorTimer, eventTimer, historyRefreshTimer, lastSeenLogId = 0
 
 // Device state accessors
 const findDev = (id) => devices.value.find(d => d.device_id === id)?.state || {}
@@ -193,9 +197,10 @@ const fanOn = computed(() => findDev('fan01').on ?? false)
 const fanAuto = computed(() => findDev('fan01').auto ?? false)
 const doorLocked = computed(() => findDev('door01').locked ?? true)
 const winOpen = computed(() => findDev('window01').open ?? false)
-const doorLastName = ref('张三')
-const doorLastTime = ref('')
-const sceneLabel = ref('回家模式')
+const doorLastName = ref('--')
+const doorLastTime = ref('--')
+const sceneActive = inject('sceneActive', ref(''))
+const sceneLabel = computed(() => ({ away: '离家模式', home: '回家模式', night: '睡眠模式' }[sceneActive.value] || '—'))
 const tempWarn = computed(() => (sensors.value.temperature || 0) > 30 ? '#e5544b' : '#e9e6df')
 
 // Floor plan colors
@@ -255,10 +260,33 @@ const refreshDevices = async () => {
 
 const fetchSensors = async () => {
   try { const d = await api.sensorsLatest(); sensors.value = d; setOnline(true)
-    if (!history.value.length || history.value.length > 300) history.value = []
     history.value.push({ ts: d.ts || new Date().toISOString(), temp: d.temperature || 25, hum: d.humidity || 55 })
     if (history.value.length > 144) history.value = history.value.slice(-144)
   } catch { setOnline(false) }
+}
+
+const fetchHistoryInitial = async () => {
+  try {
+    const [tempHist, humHist] = await Promise.all([
+      api.sensorsHistory({ metric: 'temperature', interval: '15m' }),
+      api.sensorsHistory({ metric: 'humidity', interval: '15m' }),
+    ])
+    const humMap = {}
+    ;(humHist || []).forEach(h => { humMap[h.ts] = h.avg })
+    history.value = (tempHist || []).map(t => ({
+      ts: t.ts,
+      temp: t.avg,
+      hum: humMap[t.ts] ?? 50,
+    }))
+  } catch {}
+}
+
+const fetchLastDetection = async () => {
+  try {
+    const r = await api.getDetections({ page: 1, size: 1 })
+    if (r.items && r.items.length) lastDetection.value = r.items[0]
+    else lastDetection.value = null
+  } catch {}
 }
 
 const fetchEvents = async () => {
@@ -267,11 +295,14 @@ const fetchEvents = async () => {
       const isDeny = l.action === 'door_deny'; const isPass = l.action === 'door_open'
       return { id: l.id, text: (isDeny ? '门禁拒绝' : isPass ? `${l.operator} 开门通过` : actionLabel(l.action)), time: dayjs(l.ts).format('HH:mm'), color: isDeny ? '#e5544b' : isPass ? '#46b98a' : '#8b95a3', bold: isDeny || isPass }
     })
-    const hasDeny = (r.items||[]).some(l => l.action === 'door_deny')
-    if (hasDeny) { denyFlash.value = 1; setTimeout(() => denyFlash.value = 0, 2000) }
+    const items = r.items || []
+    const maxId = items.length ? Math.max(...items.map(l => l.id)) : 0
+    const newDeny = items.find(l => l.action === 'door_deny' && l.id > lastSeenLogId)
+    if (newDeny && lastSeenLogId > 0) { denyFlash.value = 1; setTimeout(() => denyFlash.value = 0, 2000) }
+    lastSeenLogId = maxId
   } catch {}
 }
-const actionLabel = (a) => ({ light_on:'开灯', light_off:'关灯', fan_auto_on:'风扇自启', scene_away:'离家', scene_home:'回家', scene_night:'睡眠' }[a] || a)
+const actionLabel = (a) => ({ light_on:'开灯', light_off:'关灯', fan_auto_on:'风扇自启', fan_auto_off:'风扇自停(降温)', scene_away:'离家', scene_home:'回家', scene_night:'睡眠' }[a] || a)
 
 // Sync light/AC local state from API
 watch(devices, () => {
@@ -279,12 +310,15 @@ watch(devices, () => {
   const a = devices.value.find(d=>d.device_id==='ac01'); if(a) acTemp.value = a.state?.temp_set??26
 }, { deep: true })
 
-onMounted(() => {
-  refreshDevices(); fetchSensors(); fetchEvents()
+onMounted(async () => {
+  refreshDevices()
+  await fetchHistoryInitial()
+  fetchSensors(); fetchEvents(); fetchLastDetection()
   sensorTimer = setInterval(fetchSensors, 3000)
   eventTimer = setInterval(fetchEvents, 5000)
+  historyRefreshTimer = setInterval(fetchHistoryInitial, 5 * 60 * 1000)
 })
-onUnmounted(() => { clearInterval(sensorTimer); clearInterval(eventTimer) })
+onUnmounted(() => { clearInterval(sensorTimer); clearInterval(eventTimer); clearInterval(historyRefreshTimer) })
 </script>
 
 <style scoped>
@@ -328,7 +362,7 @@ onUnmounted(() => { clearInterval(sensorTimer); clearInterval(eventTimer) })
 .chart-header .card-title{margin-bottom:0}
 .chart-legend{display:flex;gap:12px;font-size:10px;color:#b9c1cd}
 .chart-svg{width:100%;height:auto;display:block}
-.chart-ticks{display:flex;justify-content:space-between;font-size:10px;color:#6b7686;margin-top:2px;font-variant-numeric:tabular-nums}
+.chart-ticks{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;color:#6b7686;margin-top:2px;font-variant-numeric:tabular-nums}
 .event-card{display:flex;flex-direction:column;max-height:390px}
 .event-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid #1e2732}
 .event-poll{font-size:10px;color:#6b7686;display:flex;align-items:center;gap:4px}
@@ -337,7 +371,9 @@ onUnmounted(() => { clearInterval(sensorTimer); clearInterval(eventTimer) })
 .event-item{padding:8px 10px;border-left:3px solid #2a3442;margin:2px 0;font-size:12px;display:flex;justify-content:space-between;align-items:center;background:#141a23;border-radius:0 8px 8px 0}
 .event-time{font-size:10px;color:#6b7686;font-variant-numeric:tabular-nums;flex-shrink:0}
 .event-empty{text-align:center;padding:30px 0;color:#6b7686;font-size:12px}
-.yolo-card{cursor:pointer}
-.yolo-placeholder{position:relative;border-radius:11px;overflow:hidden;aspect-ratio:16/10;background:linear-gradient(135deg,#1e2732,#151b23);border:1px solid #2a3442;display:flex;align-items:center;justify-content:center}
+.yolo-card{cursor:pointer;transition:border-color .15s}
+.yolo-card:hover{border-color:#33404f}
+.yolo-thumb{border-radius:11px;overflow:hidden;aspect-ratio:16/10;background:linear-gradient(135deg,#1e2732,#151b23);border:1px solid #2a3442}
+.yolo-placeholder{position:relative;border-radius:11px;overflow:hidden;aspect-ratio:16/10;background:linear-gradient(135deg,#1e2732,#151b23);border:1px solid #2a3442;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .yolo-box{position:absolute}
 </style>

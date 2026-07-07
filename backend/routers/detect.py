@@ -53,3 +53,21 @@ def detect_image(
         "annotated_url": annotated_url,
         "detections": detections,
     })
+
+
+@router.get("/detections")
+def list_detections(
+    page: int = Query(default=1, ge=1),
+    size: int = Query(default=6, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    q = db.query(Detection).order_by(Detection.ts.desc())
+    total = q.count()
+    items = q.offset((page - 1) * size).limit(size).all()
+    return resp({"total": total, "items": [{
+        "id": d.id,
+        "image_url": d.image_path,
+        "annotated_url": d.annotated_path,
+        "detections": d.result_json,
+        "ts": d.ts.isoformat() if d.ts else None,
+    } for d in items]})

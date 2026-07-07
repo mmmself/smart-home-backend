@@ -50,7 +50,8 @@
           <div>
             <div class="deny-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e5544b" stroke-width="2"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg> 未授权人员，已拒绝开门</div>
             <div class="deny-sub">相似度 <span class="deny-score">{{ scoreText }}</span> 低于阈值</div>
-            <div class="deny-push"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#46b98a" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> 已推送告警至户主微信</div>
+            <div v-if="result?.notified" class="deny-push"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#46b98a" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> 已推送告警至户主微信</div>
+            <div v-else class="deny-push" style="color:#6b7686"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7686" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg> 告警推送未配置</div>
           </div>
           <button @click="reset" class="btn-reset">重新验证</button>
         </div>
@@ -61,6 +62,13 @@
           <div class="noface-text">未检测到人脸，请换一张正面照片</div>
           <button @click="reset" class="btn-reset">重新上传</button>
         </div>
+
+        <!-- Error -->
+        <div v-if="state==='error'" class="noface-block">
+          <div class="noface-icon" style="border-color:#3a1c1a"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e5544b" stroke-width="1.5" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg></div>
+          <div class="noface-text" style="color:#f4a9a4">后端未连接，验证未执行</div>
+          <button @click="reset" class="btn-reset">重试</button>
+        </div>
       </div>
 
       <div class="card history-card">
@@ -69,7 +77,7 @@
           <span class="h-dot" :style="{background:h.pass?'#46b98a':'#e5544b'}"></span>
           <div style="flex:1"><div class="h-label" :style="{color:h.pass?'#46b98a':'#e5544b'}">{{ h.pass ? (h.name||'通过') : '拒绝' }}</div><div class="h-meta">相似度 {{ h.score }} · {{ h.time }}</div></div>
         </div>
-        <div v-if="!history.length" style="color:#6b7686;text-align:center;padding:20px">暂无验证记录</div>
+        <EmptyState v-if="!history.length" icon="clock" text="暂无验证记录" />
       </div>
     </div>
 
@@ -91,7 +99,7 @@
           </div>
         </div>
       </div>
-      <div v-if="!library.length" style="text-align:center;color:#6b7686;padding:40px">尚未录入人脸，请先创建人员</div>
+      <EmptyState v-if="!library.length" icon="person" text="尚未录入人脸，请先创建人员" />
     </div>
   </div>
 </template>
@@ -99,9 +107,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { api } from '../api'
+import EmptyState from '../components/EmptyState.vue'
 import dayjs from 'dayjs'
 
-const props = defineProps(['online', 'setOnline', 'showToast', 'lightbox', 'picker'])
+const props = defineProps(['online', 'setOnline', 'showToast', 'confirm', 'lightbox', 'picker'])
 const { showToast, setOnline, lightbox, picker } = props
 
 const tab = ref('verify')
@@ -125,7 +134,16 @@ const doUpload = async () => {
     const h = { id: Date.now(), pass: d.pass, name: d.person?.name, score: d.score?.toFixed(2) || '0.00', time: dayjs().format('HH:mm') }
     history.value = [h, ...history.value].slice(0, 5)
     showToast(d.pass ? 'success' : 'error', d.pass ? `欢迎回家${d.person?.name ? '，'+d.person.name : ''}` : '未授权人员，已拒绝开门')
-  } catch { setOnline(false); simVerify('pass') }
+  } catch (e) {
+    if (e.isBusiness) {
+      state.value = 'noface'
+      showToast('info', e.message)
+    } else {
+      setOnline(false)
+      state.value = 'error'
+      showToast('error', '后端未连接，验证未执行')
+    }
+  }
 }
 
 const simVerify = (kind) => {
@@ -148,7 +166,11 @@ const fetchLib = async () => {
 const doEnroll = async (personId) => {
   const f = await picker('image/*')
   if (!f) return
-  try { await api.faceEnroll(personId, f); setOnline(true); fetchLib(); showToast('success', '人脸录入成功') } catch { showToast('error', '录入失败') }
+  try { await api.faceEnroll(personId, f); setOnline(true); fetchLib(); showToast('success', '人脸录入成功') }
+  catch (e) {
+    if (e.isBusiness) showToast('error', e.message)
+    else { setOnline(false); showToast('error', '后端未连接，录入未执行') }
+  }
 }
 const doDelFace = async (faceId) => {
   props.confirm({ title: '删除人脸照片', text: '确定删除该人脸特征？删除后这张照片将不再用于识别。', okText: '删除', okBg: '#e5544b', onOk: async () => {
@@ -179,7 +201,8 @@ onMounted(() => { fetchLogs(); fetchLib() })
 .upload-hint{font-size:11px;color:#6b7686;margin-bottom:18px}
 .demo-cta{display:flex;gap:8px;align-items:center;justify-content:center}
 .demo-label{font-size:11px;color:#6b7686}
-.btn-demo{padding:6px 12px;border-radius:7px;border:1px solid;cursor:pointer;font-size:11px;font-family:inherit}
+.btn-demo{padding:6px 12px;border-radius:7px;border:1px solid;cursor:pointer;font-size:11px;font-family:inherit;transition:.15s}
+.btn-demo:hover{filter:brightness(1.15)}
 .btn-pass{background:#16281f;border-color:#2f6b4f;color:#7fd6ab}
 .btn-deny{background:#281615;border-color:#6b2f2c;color:#f4a9a4}
 .btn-noface{background:#1c232e;border-color:#3a4757;color:#98a2b0}
@@ -201,7 +224,8 @@ onMounted(() => { fetchLogs(); fetchLib() })
 .pass-title{font-size:18px;font-weight:700;color:#8ce0b8}
 .pass-sub{font-size:11px;color:#98a2b0;margin-top:2px}
 .pass-score{font-family:'JetBrains Mono',monospace;color:#f2a950;font-variant-numeric:tabular-nums}
-.btn-reset{margin-top:12px;padding:7px 16px;border-radius:8px;border:1px solid #2a3442;background:#1c232e;color:#b9c1cd;cursor:pointer;font-size:12px;font-family:inherit}
+.btn-reset{margin-top:12px;padding:7px 16px;border-radius:8px;border:1px solid #2a3442;background:#1c232e;color:#b9c1cd;cursor:pointer;font-size:12px;font-family:inherit;transition:border-color .15s}
+.btn-reset:hover{border-color:#33404f;color:#e9e6df}
 .deny-card{display:flex;gap:14px;padding:18px;border-radius:12px;background:rgba(229,84,75,.08);border:1px solid rgba(229,84,75,.3);align-items:center;max-width:400px;flex-wrap:wrap}
 .deny-avatar{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#3a1c1a,#1a1210);border:1px solid #6b2f2c;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .deny-title{font-size:16px;font-weight:700;color:#f4a9a4;display:flex;align-items:center;gap:6px}
@@ -223,7 +247,8 @@ onMounted(() => { fetchLogs(); fetchLib() })
 .lib-name{font-size:14px;font-weight:700}
 .lib-role{font-size:10px;padding:2px 7px;border-radius:5px}
 .lib-count{font-size:11px;color:#6b7686}
-.lib-add{margin-left:auto;padding:5px 12px;border-radius:7px;border:1px dashed #33404f;background:transparent;color:#6b7686;cursor:pointer;font-size:11px;font-family:inherit}
+.lib-add{margin-left:auto;padding:5px 12px;border-radius:7px;border:1px dashed #33404f;background:transparent;color:#6b7686;cursor:pointer;font-size:11px;font-family:inherit;transition:.15s}
+.lib-add:hover{color:#e9e6df;border-color:#4a5767}
 .lib-faces{display:flex;flex-wrap:wrap;gap:10px}
 .lib-face{position:relative;width:90px;height:110px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#2a3442,#141a23);border:1px solid #2a3442;display:flex;align-items:center;justify-content:center}
 .lib-img{width:100%;height:100%;object-fit:cover}

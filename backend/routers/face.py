@@ -130,12 +130,13 @@ def verify(
             detail={"score": best_score, "reason": deny_reason or "low_score"},
         ))
         db.commit()
-        push_stranger(snapshot_url, best_score)
+        notified = push_stranger(snapshot_url, best_score)
         return resp({
             "pass": False,
             "score": best_score,
             "person": None,
             "snapshot_url": snapshot_url,
+            "notified": notified,
         })
 
 

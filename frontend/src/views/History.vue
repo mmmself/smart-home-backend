@@ -41,14 +41,15 @@
         <span class="ch-val">{{ c.change }}</span>
         <span class="ch-trigger">{{ c.trigger }}</span>
       </div>
-      <div v-if="!changes.length" style="text-align:center;color:#6b7686;padding:20px">暂无状态变化记录</div>
+      <EmptyState v-if="!changes.length" icon="activity" text="暂无状态变化记录" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { api } from '../api'
+import EmptyState from '../components/EmptyState.vue'
 import dayjs from 'dayjs'
 
 const props = defineProps(['online', 'setOnline'])
@@ -60,7 +61,7 @@ const interval = ref('1h')
 const chartData = ref([])
 const changes = ref([])
 
-const metrics = [{key:'temperature',label:'温度'},{key:'humidity',label:'湿度'},{key:'brightness',label:'亮度'}]
+const metrics = [{key:'temperature',label:'温度'},{key:'humidity',label:'湿度'}]
 const ranges = [{key:'24h',label:'近 24h'},{key:'7d',label:'近 7 天'},{key:'today',label:'今天'}]
 const intervals = [{key:'5m',label:'5 分钟'},{key:'1h',label:'1 小时'}]
 const chartColor = ref('#f2a950')
@@ -92,23 +93,30 @@ const svgTicks = computed(() => {
 })
 
 const fetchHistory = async () => {
-  try { const d = await api.sensorsHistory({ metric: metric.value, interval: interval.value }); chartData.value = d || []; setOnline(true)
-    chartColor.value = metric.value === 'temperature' ? '#f2a950' : metric.value === 'humidity' ? '#5b8def' : '#8fce6a'
+  let start, end = dayjs().format('YYYY-MM-DDTHH:mm:ss')
+  let iv = interval.value
+  if (range.value === '24h') start = dayjs().subtract(24, 'hour').format('YYYY-MM-DDTHH:mm:ss')
+  else if (range.value === '7d') { start = dayjs().subtract(7, 'day').format('YYYY-MM-DDTHH:mm:ss'); iv = '1h' }
+  else if (range.value === 'today') start = dayjs().startOf('day').format('YYYY-MM-DDTHH:mm:ss')
+  try { const d = await api.sensorsHistory({ metric: metric.value, interval: iv, start, end }); chartData.value = d || []; setOnline(true)
+    chartColor.value = metric.value === 'temperature' ? '#f2a950' : '#5b8def'
   } catch { setOnline(false) }
 }
 
+watch([metric, range, interval], () => fetchHistory())
+
 const fetchChanges = async () => {
   try { const r = await api.getLogs({ page: 1, size: 15 }); setOnline(true)
-    changes.value = (r.items||[]).filter(l => ['door_open','door_deny','light_on','light_off','fan_auto_on','scene_away','scene_home','scene_night'].includes(l.action)).map(l => {
-      const tone = l.action==='door_deny'?'#e5544b':l.action==='door_open'?'#46b98a':l.action==='fan_auto_on'?'#5bd0e0':l.action.includes('scene')?'#5b8def':'#f2a950'
+    changes.value = (r.items||[]).filter(l => ['door_open','door_deny','light_on','light_off','fan_auto_on','fan_auto_off','scene_away','scene_home','scene_night'].includes(l.action)).map(l => {
+      const tone = l.action==='door_deny'?'#e5544b':l.action==='door_open'?'#46b98a':(l.action==='fan_auto_on'||l.action==='fan_auto_off')?'#5bd0e0':l.action.includes('scene')?'#5b8def':'#f2a950'
       const ts = l.ts ? dayjs(l.ts) : dayjs()
       return { id:l.id, date:ts.format('MM-DD'), time:ts.format('HH:mm'), device:l.target||'--', change:actionLabel(l.action), trigger:l.operator||'system', tone }
     })
   } catch {}
 }
-const actionLabel = (a) => ({ door_open:'开门通过', door_deny:'门禁拒绝', light_on:'开灯', light_off:'关灯', fan_auto_on:'风扇自启(高温)', scene_away:'离家模式', scene_home:'回家模式', scene_night:'睡眠模式' }[a] || a)
+const actionLabel = (a) => ({ door_open:'开门通过', door_deny:'门禁拒绝', light_on:'开灯', light_off:'关灯', fan_auto_on:'风扇自启(高温)', fan_auto_off:'风扇自停(降温)', scene_away:'离家模式', scene_home:'回家模式', scene_night:'睡眠模式' }[a] || a)
 
-onMounted(() => { fetchChanges() })
+onMounted(() => { fetchHistory(); fetchChanges() })
 </script>
 
 <style scoped>

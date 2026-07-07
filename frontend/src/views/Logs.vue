@@ -19,17 +19,18 @@
         <pre>{{ JSON.stringify(showDetail, null, 2) }}</pre>
         <button @click="showDetail=null" class="btn-close">关闭</button>
       </div>
-      <div v-if="!list.length" style="text-align:center;padding:30px;color:#6b7686">暂无日志</div>
-      <div v-if="total > pageSize" style="display:flex;justify-content:center;gap:6px;margin-top:12px">
-        <button v-for="i in Math.ceil(total/pageSize)" :key="i" :class="['page-btn',{active:page===i}]" @click="page=i;fetchList()">{{ i }}</button>
+      <EmptyState v-if="!list.length" icon="list" text="暂无日志" />
+      <div v-if="total > pageSize" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:12px">
+        <span v-for="(p,i) in pageItems" :key="i" :class="['page-btn',{active:page===p,ellipsis:p==='…'}]" @click="typeof p==='number'?(page=p,fetchList()):''">{{ p }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { api } from '../api'
+import EmptyState from '../components/EmptyState.vue'
 import dayjs from 'dayjs'
 
 const props = defineProps(['online', 'setOnline'])
@@ -38,10 +39,20 @@ const { setOnline } = props
 const filterAction = ref(''); const filterStart = ref(''); const filterEnd = ref('')
 const page = ref(1); const pageSize = 15; const total = ref(0); const list = ref([])
 const showDetail = ref(null)
+const pageItems = computed(() => {
+  const n = Math.ceil(total.value / pageSize); const p = page.value
+  if (n <= 7) return Array.from({ length: n }, (_, i) => i + 1)
+  const items = [1]; const start = Math.max(2, p - 1); const end = Math.min(n - 1, p + 1)
+  if (start > 2) items.push('…')
+  for (let i = start; i <= end; i++) items.push(i)
+  if (end < n - 1) items.push('…')
+  items.push(n)
+  return items
+})
 
 const formatTime = (t) => t ? dayjs(t).format('YYYY-MM-DD HH:mm:ss') : ''
-const actionLabel = (a) => ({ door_open:'开门通过', door_deny:'门禁拒绝', light_on:'开灯', light_off:'关灯', ac_on:'开空调', ac_off:'关空调', fan_auto_on:'风扇自启', scene_away:'离家', scene_home:'回家', scene_night:'睡眠', linkage_light_on:'联动开灯' }[a] || a)
-const actionOptions = Object.entries({ door_open:'开门通过', door_deny:'门禁拒绝', light_on:'开灯', light_off:'关灯', fan_auto_on:'风扇自启' }).map(([v,l])=>({value:v,label:l}))
+const actionLabel = (a) => ({ door_open:'开门通过', door_deny:'门禁拒绝', light_on:'开灯', light_off:'关灯', ac_on:'开空调', ac_off:'关空调', fan_auto_on:'风扇自启', fan_auto_off:'风扇自停(降温)', scene_away:'离家', scene_home:'回家', scene_night:'睡眠', linkage_light_on:'联动开灯' }[a] || a)
+const actionOptions = Object.entries({ door_open:'开门通过', door_deny:'门禁拒绝', light_on:'开灯', light_off:'关灯', fan_auto_on:'风扇自启', fan_auto_off:'风扇自停(降温)' }).map(([v,l])=>({value:v,label:l}))
 const detailText = (l) => l.detail && Object.keys(l.detail).length ? '查看详情 ▸' : '-'
 
 const fetchList = async () => {
@@ -67,13 +78,15 @@ onMounted(fetchList)
 .action-tag{padding:2px 7px;border-radius:4px;font-size:10px}
 .action-tag.door_deny{background:rgba(229,84,75,.15);color:#e5544b}
 .action-tag.door_open{background:rgba(70,185,138,.15);color:#46b98a}
-.action-tag.fan_auto_on{background:rgba(91,208,224,.15);color:#5bd0e0}
+.action-tag.fan_auto_on,.action-tag.fan_auto_off{background:rgba(91,208,224,.15);color:#5bd0e0}
 .action-tag.scene_away,.action-tag.scene_home,.action-tag.scene_night{background:rgba(91,141,239,.15);color:#5b8def}
 .action-tag.light_on,.action-tag.light_off,.action-tag.ac_on,.action-tag.ac_off,.action-tag.linkage_light_on{background:rgba(242,169,80,.1);color:#f2a950}
 .l-detail{color:#5b8def;cursor:pointer;font-size:11px}
 .detail-panel{background:#141a23;border:1px solid #2a3442;border-radius:10px;padding:14px;margin-top:10px;position:relative}
 .detail-panel pre{font-size:11px;color:#8b95a3;white-space:pre-wrap;margin:0}
 .btn-close{position:absolute;top:8px;right:10px;padding:2px 8px;border-radius:4px;border:1px solid #2a3442;background:#1c232e;color:#8b95a3;cursor:pointer;font-size:10px}
-.page-btn{padding:4px 10px;border-radius:5px;border:1px solid #2a3442;background:#1c232e;color:#8b95a3;cursor:pointer;font-size:11px}
+.page-btn{padding:4px 10px;border-radius:5px;border:1px solid #2a3442;background:#1c232e;color:#8b95a3;cursor:pointer;font-size:11px;transition:.15s}
+.page-btn:hover:not(.active):not(.ellipsis){border-color:#33404f;color:#e9e6df}
 .page-btn.active{background:rgba(242,169,80,.1);border-color:#f2a950;color:#f2a950}
+.page-btn.ellipsis{cursor:default;border-color:transparent;background:transparent}
 </style>

@@ -6,13 +6,15 @@ http.interceptors.response.use(
   (res) => {
     const d = res.data
     if (d.code !== 0 && d.code !== undefined) {
-      console.error('API error:', d.msg || '请求失败')
-      return Promise.reject(new Error(d.msg))
+      const e = new Error(d.msg || '请求失败')
+      e.isBusiness = true
+      e.data = d.data
+      return Promise.reject(e)
     }
     return d.data
   },
   (err) => {
-    console.error('Network error:', err.message || '网络错误')
+    err.isBusiness = false
     return Promise.reject(err)
   }
 )
@@ -28,6 +30,7 @@ export const api = {
 
   // Detect
   detect: (file, linkage = 0) => { const fd = new FormData(); fd.append('file', file); return http.post(`/api/detect?linkage=${linkage}`, fd) },
+  getDetections: (params) => http.get('/api/detections', { params }),
 
   // Face
   faceEnroll: (personId, file) => { const fd = new FormData(); fd.append('file', file); return http.post(`/api/face/enroll?person_id=${personId}`, fd) },
