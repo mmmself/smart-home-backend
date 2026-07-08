@@ -64,7 +64,7 @@ export default function FaceAccess({ toast, onOpenLightbox }: FaceAccessProps) {
     const res = await api.getFaceLibrary();
     if (res.success && res.data) {
       // Transform backend format to frontend format
-      const baseUrl = "http://localhost:8000"; // Backend base URL for image paths
+      const baseUrl = import.meta.env.VITE_API_BASE || "";
       const transformed = res.data.map((item: any) => ({
         person: {
           id: item.person_id,

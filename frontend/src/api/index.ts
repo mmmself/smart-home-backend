@@ -168,14 +168,12 @@ export interface SensorReading {
 export async function getLatestSensor(): Promise<{ success: boolean; data?: SensorReading; error?: string }> {
   const res = await apiRequest<any>('/sensors/latest');
   if (res.code === 0 && res.data) {
-    const baseHumidity = 55;
-    const variation = Math.sin(Date.now() * 0.0001) * 8 + (Math.random() - 0.5) * 4;
     return {
       success: true,
       data: {
         timestamp: res.data.ts || new Date().toISOString(),
-        temperature: res.data.temperature || 24,
-        humidity: Math.round(Math.max(30, Math.min(80, baseHumidity + variation)) * 10) / 10,
+        temperature: res.data.temperature ?? 24,
+        humidity: res.data.humidity ?? 50,
       },
     };
   }
@@ -185,13 +183,13 @@ export async function getLatestSensor(): Promise<{ success: boolean; data?: Sens
 export async function getSensorHistory(metric: string = 'temperature'): Promise<{ success: boolean; data?: SensorReading[]; error?: string }> {
   const res = await apiRequest<any[]>('/sensors/history?metric=' + metric);
   if (res.code === 0) {
-    const data = (res.data || []).map((item: any, index: number) => {
-      const baseHumidity = 55;
-      const variation = Math.sin(index * 0.8) * 8 + Math.cos(index * 1.3) * 5 + (Math.random() - 0.5) * 4;
+    const data = (res.data || []).map((item: any) => {
+      // Return actual data from backend; humidity comes from /sensors/history?metric=humidity
       return {
         timestamp: item.ts,
-        temperature: item.avg,
-        humidity: Math.round(Math.max(30, Math.min(80, baseHumidity + variation)) * 10) / 10,
+        temperature: metric === 'temperature' ? item.avg : undefined,
+        humidity: metric === 'humidity' ? item.avg : undefined,
+        [metric]: item.avg,
       };
     });
     return { success: true, data };

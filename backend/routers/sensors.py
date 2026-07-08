@@ -5,8 +5,10 @@ from ..database import get_db
 from ..models import SensorData
 from ..schemas import resp
 from datetime import datetime
+import logging
 
 router = APIRouter(prefix="/api")
+logger = logging.getLogger(__name__)
 
 
 @router.get("/sensors/latest")
@@ -45,7 +47,7 @@ def sensors_history(
 
     # Build SQL conditions for time filtering
     sql_conditions = "metric = :metric"
-    params = {"bucket": bucket_seconds, "metric": metric}
+    params = {"metric": metric}
     if start:
         try:
             start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
@@ -61,10 +63,11 @@ def sensors_history(
         except ValueError:
             pass
 
+    # Use f-string for bucket (SQLAlchemy text() can't parameterize expressions)
     # Use raw SQL for time bucketing (MySQL specific)
     raw_sql = text(f"""
-        SELECT 
-            FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/:bucket)*:bucket) as bucket,
+        SELECT
+            FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/{bucket_seconds})*{bucket_seconds}) as bucket,
             AVG(value) as avg_val,
             MAX(value) as max_val,
             MIN(value) as min_val
@@ -75,10 +78,7 @@ def sensors_history(
     """)
     
     try:
-        rows = db.execute(raw_sql, {
-            "bucket": bucket_seconds,
-            "metric": metric
-        }).fetchall()
+        rows = db.execute(raw_sql, params).fetchall()
         
         result = [{
             "ts": r.bucket.isoformat() if hasattr(r.bucket, 'isoformat') else str(r.bucket),
@@ -87,7 +87,7 @@ def sensors_history(
             "min": round(float(r.min_val), 2) if r.min_val is not None else None
         } for r in rows]
     except Exception as e:
-        # Fallback: return empty if query fails
+        logger.error(f"Sensor history query failed: {e}", exc_info=True)
         result = []
     
     return resp(result)
