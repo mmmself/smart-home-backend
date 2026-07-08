@@ -43,31 +43,33 @@ def sensors_history(
     except (ValueError, IndexError):
         bucket_seconds = 300
 
-    # Build base filter conditions
-    conditions = [SensorData.metric == metric]
-    
+    # Build SQL conditions for time filtering
+    sql_conditions = "metric = :metric"
+    params = {"bucket": bucket_seconds, "metric": metric}
     if start:
         try:
             start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
-            conditions.append(SensorData.ts >= start_dt)
+            sql_conditions += " AND ts >= :start_ts"
+            params["start_ts"] = start_dt
         except ValueError:
             pass
     if end:
         try:
             end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
-            conditions.append(SensorData.ts <= end_dt)
+            sql_conditions += " AND ts <= :end_ts"
+            params["end_ts"] = end_dt
         except ValueError:
             pass
 
     # Use raw SQL for time bucketing (MySQL specific)
-    raw_sql = text("""
+    raw_sql = text(f"""
         SELECT 
             FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/:bucket)*:bucket) as bucket,
             AVG(value) as avg_val,
             MAX(value) as max_val,
             MIN(value) as min_val
         FROM sensor_data
-        WHERE metric = :metric
+        WHERE {sql_conditions}
         GROUP BY bucket
         ORDER BY bucket
     """)

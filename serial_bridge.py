@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 """
 serial_bridge.py — Arduino MCU 与后端之间的串口桥接脚本（根目录独立运行）。
 
