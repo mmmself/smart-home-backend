@@ -10,6 +10,8 @@ import {
   Home,
   LogOut,
   Moon,
+  Wifi,
+  WifiOff,
   Clock,
   X,
   Sparkles,
@@ -224,7 +226,70 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 flex font-sans antialiased selection:bg-indigo-200 selection:text-indigo-800">
       
-      {/* Main Content Stage Wrapper */}
+      {/* 1. Left Sidebar Navigation */}
+      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between h-screen sticky top-0 shrink-0 hidden md:flex shadow-sm">
+        
+        {/* Sidebar Brand header */}
+        <div className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-200">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-sm font-sans font-semibold tracking-tight text-gray-800">AI 智能安防系统</h1>
+              <p className="text-[10px] text-gray-400 font-medium font-mono uppercase tracking-wider mt-0.5">V3.5 MULTI-AGENT</p>
+            </div>
+          </div>
+
+          {/* Navigation Links list */}
+          <nav className="space-y-1.5 mt-8">
+            {menuItems.map((item) => {
+              const IconComp = item.icon;
+              const isActive = currentView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setCurrentView(item.id)}
+                  className={`w-full px-3.5 py-3 rounded-xl text-xs font-semibold flex items-center gap-3 transition-all duration-150 relative ${
+                    isActive
+                      ? "bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-inner"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-transparent"
+                  }`}
+                >
+                  <IconComp className={`w-4.5 h-4.5 ${isActive ? "text-indigo-600" : "text-gray-400"}`} />
+                  {item.label}
+                  {isActive && (
+                    <div className="absolute left-0 top-3 bottom-3 w-1 bg-indigo-500 rounded-r" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Sidebar bottom server connection badge */}
+        <div className="p-6 border-t border-gray-100 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {isServerConnected ? (
+                <>
+                  <Wifi className="w-4 h-4 text-emerald-500 animate-pulse" />
+                  <span className="text-[11px] font-semibold text-emerald-600">系统已连接 (本地)</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-4 h-4 text-rose-500" />
+                  <span className="text-[11px] font-semibold text-rose-600">服务器连接中断</span>
+                </>
+              )}
+            </div>
+            <span className="text-[9px] font-mono text-gray-400">PORT: 3000</span>
+          </div>
+        </div>
+
+      </aside>
+
+      {/* 2. Main Content Stage Wrapper */}
       <div className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto">
         
         {/* Top Header Bar */}
