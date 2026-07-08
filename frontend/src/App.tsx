@@ -14,7 +14,8 @@ import {
   WifiOff,
   Clock,
   X,
-  Sparkles,
+  Menu,
+  ShieldCheck,
 } from "lucide-react";
 
 import Dashboard from "./views/Dashboard";
@@ -39,6 +40,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState<ActiveView>("dashboard");
   const [activeScene, setActiveScene] = useState<"home" | "away" | "sleep">("home");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Devices state and controller
   const [devices, setDevices] = useState<DeviceState>({
@@ -223,82 +225,136 @@ export default function App() {
     return found ? found.label : "主页";
   };
 
+  const handleNavigate = (view: ActiveView) => {
+    setCurrentView(view);
+    setSidebarOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800 flex font-sans antialiased selection:bg-indigo-200 selection:text-indigo-800">
-      
-      {/* 1. Left Sidebar Navigation */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between h-screen sticky top-0 shrink-0 hidden md:flex shadow-sm">
-        
-        {/* Sidebar Brand header */}
-        <div className="p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-200">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-sm font-sans font-semibold tracking-tight text-gray-800">AI 智能安防系统</h1>
-              <p className="text-[10px] text-gray-400 font-medium font-mono uppercase tracking-wider mt-0.5">V3.5 MULTI-AGENT</p>
-            </div>
+
+      {/* Desktop Left Sidebar */}
+      <aside className="hidden md:flex w-60 flex-col bg-white border-r border-gray-200 h-screen sticky top-0 z-40">
+
+        {/* Logo / Brand area */}
+        <div className="h-16 flex items-center gap-2.5 px-5 border-b border-gray-200 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
+            <ShieldCheck className="w-5 h-5 text-white" />
           </div>
-
-          {/* Navigation Links list */}
-          <nav className="space-y-1.5 mt-8">
-            {menuItems.map((item) => {
-              const IconComp = item.icon;
-              const isActive = currentView === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentView(item.id)}
-                  className={`w-full px-3.5 py-3 rounded-xl text-xs font-semibold flex items-center gap-3 transition-all duration-150 relative ${
-                    isActive
-                      ? "bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-inner"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-transparent"
-                  }`}
-                >
-                  <IconComp className={`w-4.5 h-4.5 ${isActive ? "text-indigo-600" : "text-gray-400"}`} />
-                  {item.label}
-                  {isActive && (
-                    <div className="absolute left-0 top-3 bottom-3 w-1 bg-indigo-500 rounded-r" />
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Sidebar bottom server connection badge */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {isServerConnected ? (
-                <>
-                  <Wifi className="w-4 h-4 text-emerald-500 animate-pulse" />
-                  <span className="text-[11px] font-semibold text-emerald-600">系统已连接 (本地)</span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="w-4 h-4 text-rose-500" />
-                  <span className="text-[11px] font-semibold text-rose-600">服务器连接中断</span>
-                </>
-              )}
-            </div>
-            <span className="text-[9px] font-mono text-gray-400">PORT: 3000</span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-bold text-gray-800">Smart Home</span>
+            <span className="text-[10px] text-gray-400">智能安防管理平台</span>
           </div>
         </div>
 
+        {/* Navigation Menu */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-gray-300">功能导航</p>
+          {menuItems.map((item) => {
+            const IconComp = item.icon;
+            const isActive = currentView === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavigate(item.id)}
+                className={`w-full px-3 py-2.5 rounded-xl text-xs font-medium flex items-center gap-3 transition group ${
+                  isActive
+                    ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 border border-transparent"
+                }`}
+              >
+                <IconComp className={`w-4 h-4 shrink-0 ${isActive ? "text-indigo-600" : "text-gray-400 group-hover:text-gray-500"}`} />
+                <span className="truncate">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Server Connection Status */}
+        <div className="px-4 py-3 border-t border-gray-200 shrink-0">
+          <div className={`flex items-center gap-2 text-[10px] font-semibold px-2 py-1.5 rounded-lg ${
+            isServerConnected
+              ? "text-emerald-600 bg-emerald-50"
+              : "text-rose-500 bg-rose-50"
+          }`}>
+            {isServerConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {isServerConnected ? "后端已连接" : "后端已断开"}
+          </div>
+        </div>
       </aside>
 
-      {/* 2. Main Content Stage Wrapper */}
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white flex flex-col shadow-2xl animate-slide-in">
+            <div className="h-16 flex items-center justify-between px-5 border-b border-gray-200 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex flex-col leading-tight">
+                  <span className="text-sm font-bold text-gray-800">Smart Home</span>
+                  <span className="text-[10px] text-gray-400">智能安防管理平台</span>
+                </div>
+              </div>
+              <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+              <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-gray-300">功能导航</p>
+              {menuItems.map((item) => {
+                const IconComp = item.icon;
+                const isActive = currentView === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavigate(item.id)}
+                    className={`w-full px-3 py-2.5 rounded-xl text-xs font-medium flex items-center gap-3 transition ${
+                      isActive
+                        ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700 border border-transparent"
+                    }`}
+                  >
+                    <IconComp className={`w-4 h-4 shrink-0 ${isActive ? "text-indigo-600" : "text-gray-400"}`} />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+            <div className="px-4 py-3 border-t border-gray-200 shrink-0">
+              <div className={`flex items-center gap-2 text-[10px] font-semibold px-2 py-1.5 rounded-lg ${
+                isServerConnected
+                  ? "text-emerald-600 bg-emerald-50"
+                  : "text-rose-500 bg-rose-50"
+              }`}>
+                {isServerConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                {isServerConnected ? "后端已连接" : "后端已断开"}
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Main Content Stage Wrapper */}
       <div className="flex-1 flex flex-col min-w-0 max-h-screen overflow-y-auto">
         
         {/* Top Header Bar */}
         <header className="h-16 border-b border-gray-200 bg-white/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40 shadow-sm">
-          
+
           <div className="flex items-center gap-3">
-            {/* Mobile hamburger logo placeholder / title */}
-            <div className="md:hidden w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+            {/* Mobile hamburger menu button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+              title="打开导航菜单"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            {/* Mobile logo */}
+            <div className="md:hidden w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4 text-white" />
             </div>
             <h2 className="text-sm font-semibold text-gray-700">
               {getPageTitle()}
@@ -364,26 +420,6 @@ export default function App() {
 
         </header>
 
-        {/* Mobile Navigation Bar (visible only below md: breakpoint) */}
-        <div className="md:hidden bg-white/90 backdrop-blur border-b border-gray-200 p-2 flex overflow-x-auto gap-1 scrollbar-none sticky top-16 z-30">
-          {menuItems.map((item) => {
-            const IconComp = item.icon;
-            const isActive = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentView(item.id)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1 transition ${
-                  isActive ? "bg-indigo-600 text-white" : "text-gray-500"
-                }`}
-              >
-                <IconComp className="w-3 h-3" />
-                {item.label.replace("智能", "").replace("AI ", "")}
-              </button>
-            );
-          })}
-        </div>
-
         {/* View Component Wrapper */}
         <main className="flex-1 p-6 max-w-[90rem] mx-auto w-full space-y-6">
           
@@ -393,7 +429,7 @@ export default function App() {
                 devices={devices}
                 onDeviceCommand={handleDeviceCommand}
                 onOpenLightbox={handleOpenLightbox}
-                onNavigate={(v) => setCurrentView(v as any)}
+                onNavigate={(v) => handleNavigate(v as ActiveView)}
                 toast={addToast}
               />
             </ErrorBoundary>
