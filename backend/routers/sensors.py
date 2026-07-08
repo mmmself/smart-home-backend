@@ -44,7 +44,6 @@ def sensors_history(
         bucket_seconds = 300
 
     group_expr = f"FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/{bucket_seconds})*{bucket_seconds})"
-    cols = f"{group_expr} as bucket, AVG(value) as avg, MAX(value) as max, MIN(value) as min"
 
     q = db.query(
         text(group_expr).label("bucket"),

@@ -1,4 +1,3 @@
-from ultralytics import YOLO
 import cv2
 import os
 
@@ -10,6 +9,7 @@ _yolo_model = None
 def _get_model():
     global _yolo_model
     if _yolo_model is None:
+        from ultralytics import YOLO
         if os.path.exists(YOLO_MODEL_PATH):
             _yolo_model = YOLO(YOLO_MODEL_PATH)
         else:
