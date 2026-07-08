@@ -1,0 +1,6 @@
+{
+  "name": "Smart Home Security System",
+  "description": "An integrated smart home security dashboard with real-time sensor metrics, facial recognition gate access, object detection (YOLO simulation), persons management, and comprehensive action logs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

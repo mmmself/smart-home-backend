@@ -78,3 +78,8 @@ app.include_router(access.router, dependencies=[Depends(verify_api_key)])
 @app.get("/")
 def root():
     return {"code": 0, "msg": "ok", "data": "Smart Home Backend"}
+
+
+@app.get("/api/health")
+def health():
+    return {"code": 0, "msg": "ok", "data": {"status": "healthy"}}

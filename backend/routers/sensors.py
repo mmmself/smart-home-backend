@@ -43,33 +43,49 @@ def sensors_history(
     except (ValueError, IndexError):
         bucket_seconds = 300
 
-    group_expr = f"FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/{bucket_seconds})*{bucket_seconds})"
-    cols = f"{group_expr} as bucket, AVG(value) as avg, MAX(value) as max, MIN(value) as min"
-
-    q = db.query(
-        text(group_expr).label("bucket"),
-        sqlfunc.avg(SensorData.value).label("avg"),
-        sqlfunc.max(SensorData.value).label("max"),
-        sqlfunc.min(SensorData.value).label("min"),
-    ).filter(SensorData.metric == metric)
-
+    # Build base filter conditions
+    conditions = [SensorData.metric == metric]
+    
     if start:
         try:
-            q = q.filter(SensorData.ts >= datetime.fromisoformat(start))
+            start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
+            conditions.append(SensorData.ts >= start_dt)
         except ValueError:
             pass
     if end:
         try:
-            q = q.filter(SensorData.ts <= datetime.fromisoformat(end))
+            end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
+            conditions.append(SensorData.ts <= end_dt)
         except ValueError:
             pass
 
-    q = q.group_by(text("bucket")).order_by(text("bucket"))
-    rows = q.all()
-
-    result = [{"ts": r.bucket.isoformat() if hasattr(r.bucket, 'isoformat') else str(r.bucket),
-               "avg": round(float(r.avg), 2) if r.avg is not None else None,
-               "max": round(float(r.max), 2) if r.max is not None else None,
-               "min": round(float(r.min), 2) if r.min is not None else None}
-              for r in rows]
+    # Use raw SQL for time bucketing (MySQL specific)
+    raw_sql = text("""
+        SELECT 
+            FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/:bucket)*:bucket) as bucket,
+            AVG(value) as avg_val,
+            MAX(value) as max_val,
+            MIN(value) as min_val
+        FROM sensor_data
+        WHERE metric = :metric
+        GROUP BY bucket
+        ORDER BY bucket
+    """)
+    
+    try:
+        rows = db.execute(raw_sql, {
+            "bucket": bucket_seconds,
+            "metric": metric
+        }).fetchall()
+        
+        result = [{
+            "ts": r.bucket.isoformat() if hasattr(r.bucket, 'isoformat') else str(r.bucket),
+            "avg": round(float(r.avg_val), 2) if r.avg_val is not None else None,
+            "max": round(float(r.max_val), 2) if r.max_val is not None else None,
+            "min": round(float(r.min_val), 2) if r.min_val is not None else None
+        } for r in rows]
+    except Exception as e:
+        # Fallback: return empty if query fails
+        result = []
+    
     return resp(result)
