@@ -1,20 +1,18 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Smart Home Frontend
 
-# Run and deploy your AI Studio app
+智能家居系统前端，基于 React + Vite + TailwindCSS。
 
-This contains everything you need to run your app locally.
+## 开发
 
-View your app in AI Studio: https://ai.studio/apps/28aadabe-33c2-44fb-a897-754a958fcb60
+**前置条件:** Node.js
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
+1. 安装依赖:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. 复制环境变量文件:
+   `cp .env.example .env.local`
+3. 启动开发服务器:
    `npm run dev`
+
+## 构建
+
+`npm run build`
