@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import paho.mqtt.client as mqtt
 import json
 import logging

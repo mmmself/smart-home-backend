@@ -92,7 +92,7 @@ python scripts/capture_client.py --mode verify --once
 | `TOPIC_SUFFIX` | sh7k2d | MQTT主题后缀 |
 | `FACE_THRESHOLD` | 0.40 | 人脸识别阈值 |
 | `FAN_AUTO_ON_TEMP` | 30 | 风扇自动开启温度 |
-| `FAN_AUTO_OFF_TEMP` | 29 | 风扇自动关闭温度 |
+| `FAN_AUTO_OFF_TEMP` | 28 | 风扇自动关闭温度 |
 | `LINKAGE_CLASS` | traffic light | YOLO联动目标类别 |
 | `YOLO_MODEL_PATH` | models/yolov8n.pt | YOLO模型路径 |
 | `INSIGHTFACE_ROOT` | models/insightface | InsightFace模型目录 |

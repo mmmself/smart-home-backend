@@ -3,7 +3,7 @@ import os
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://smart:smart123456@127.0.0.1:3306/smart_home?charset=utf8mb4")
+DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://smart:smart123456@127.0.0.1:3307/smart_home?charset=utf8mb4")
 MQTT_BROKER = os.getenv("MQTT_BROKER", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 TOPIC_SUFFIX = os.getenv("TOPIC_SUFFIX", "sh7k2d")
