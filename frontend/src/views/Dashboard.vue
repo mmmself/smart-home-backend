@@ -34,7 +34,7 @@
               <span class="dev-icon" :style="{background:lightIconBg}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" :stroke="lightStroke" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.4 1 2.5h6c0-1.1.3-1.8 1-2.5A6 6 0 0 0 12 3Z"/></svg>
               </span>
-              <div><div class="dev-name">客厅灯</div><div class="dev-sub">亮度 {{ lightBr }}%</div></div>
+              <div><div class="dev-name" style="display:flex;align-items:center;gap:6px">客厅灯<span class="logical-tag">逻辑演示</span></div><div class="dev-sub">亮度 {{ lightBr }}% · 无物理灯</div></div>
             </div>
             <div class="toggle" :class="{on:lightOn}" @click="onDevice('light01',{on:!lightOn})"><span class="toggle-knob"></span></div>
           </div>
@@ -82,8 +82,8 @@
                 <span class="dev-icon-sm" style="background:#1c232e"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#98a2b0" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M12 4v16M4 12h16"/></svg></span>
                 <div class="dev-name">卧室窗</div>
               </div>
-              <div class="mini-status"><span :style="{background:winOpen?'#f2a950':'#98a2b0',width:'7px',height:'7px',borderRadius:'50%',display:'inline-block',marginRight:'4px'}"></span>{{ winOpen ? '已打开' : '已关闭' }}</div>
-              <div class="mini-sub">只读状态</div>
+              <div class="mini-status" style="color:#6b7686">N/A（无门窗磁）</div>
+              <div class="mini-sub">窗户无硬件</div>
             </div>
           </div>
         </div>
@@ -348,6 +348,7 @@ onUnmounted(() => { clearInterval(sensorTimer); clearInterval(eventTimer); clear
 .ac-btn{width:22px;height:22px;border:none;background:transparent;color:#b9c1cd;font-size:14px;cursor:pointer;border-radius:6px;font-family:inherit}
 .ac-val{font-family:'JetBrains Mono',monospace;font-size:12px;width:32px;text-align:center;font-variant-numeric:tabular-nums}
 .auto-tag{font-size:9px;color:#f2a950;border:1px solid #6a4e26;background:#2a2113;padding:1px 5px;border-radius:5px;font-weight:400}
+.logical-tag{font-size:9px;color:#6b7686;border:1px solid #2a3442;background:#1c232e;padding:1px 5px;border-radius:5px;font-weight:400}
 .dev-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dev-mini{border:1px solid #222b37;border-radius:11px;padding:10px 11px;background:#141a23}
 .mini-status{font-size:11px;color:#b9c1cd;margin-bottom:3px}
