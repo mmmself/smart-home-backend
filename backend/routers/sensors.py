@@ -5,8 +5,10 @@ from ..database import get_db
 from ..models import SensorData
 from ..schemas import resp
 from datetime import datetime
+import logging
 
 router = APIRouter(prefix="/api")
+logger = logging.getLogger(__name__)
 
 
 @router.get("/sensors/latest")
@@ -43,32 +45,49 @@ def sensors_history(
     except (ValueError, IndexError):
         bucket_seconds = 300
 
-    group_expr = f"FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/{bucket_seconds})*{bucket_seconds})"
-
-    q = db.query(
-        text(group_expr).label("bucket"),
-        sqlfunc.avg(SensorData.value).label("avg"),
-        sqlfunc.max(SensorData.value).label("max"),
-        sqlfunc.min(SensorData.value).label("min"),
-    ).filter(SensorData.metric == metric)
-
+    # Build SQL conditions for time filtering
+    sql_conditions = "metric = :metric"
+    params = {"metric": metric}
     if start:
         try:
-            q = q.filter(SensorData.ts >= datetime.fromisoformat(start))
+            start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
+            sql_conditions += " AND ts >= :start_ts"
+            params["start_ts"] = start_dt
         except ValueError:
             pass
     if end:
         try:
-            q = q.filter(SensorData.ts <= datetime.fromisoformat(end))
+            end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
+            sql_conditions += " AND ts <= :end_ts"
+            params["end_ts"] = end_dt
         except ValueError:
             pass
 
-    q = q.group_by(text("bucket")).order_by(text("bucket"))
-    rows = q.all()
-
-    result = [{"ts": r.bucket.isoformat() if hasattr(r.bucket, 'isoformat') else str(r.bucket),
-               "avg": round(float(r.avg), 2) if r.avg is not None else None,
-               "max": round(float(r.max), 2) if r.max is not None else None,
-               "min": round(float(r.min), 2) if r.min is not None else None}
-              for r in rows]
+    # Use f-string for bucket (SQLAlchemy text() can't parameterize expressions)
+    # Use raw SQL for time bucketing (MySQL specific)
+    raw_sql = text(f"""
+        SELECT
+            FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts)/{bucket_seconds})*{bucket_seconds}) as bucket,
+            AVG(value) as avg_val,
+            MAX(value) as max_val,
+            MIN(value) as min_val
+        FROM sensor_data
+        WHERE {sql_conditions}
+        GROUP BY bucket
+        ORDER BY bucket
+    """)
+    
+    try:
+        rows = db.execute(raw_sql, params).fetchall()
+        
+        result = [{
+            "ts": r.bucket.isoformat() if hasattr(r.bucket, 'isoformat') else str(r.bucket),
+            "avg": round(float(r.avg_val), 2) if r.avg_val is not None else None,
+            "max": round(float(r.max_val), 2) if r.max_val is not None else None,
+            "min": round(float(r.min_val), 2) if r.min_val is not None else None
+        } for r in rows]
+    except Exception as e:
+        logger.error(f"Sensor history query failed: {e}", exc_info=True)
+        result = []
+    
     return resp(result)

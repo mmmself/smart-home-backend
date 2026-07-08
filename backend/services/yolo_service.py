@@ -24,6 +24,6 @@ def detect(image_path: str):
     annotated = r.plot()
     annotated_path = image_path.rsplit(".", 1)[0] + "_annotated.jpg"
     cv2.imwrite(annotated_path, annotated)
-    dets = [{"cls": model.names[int(b.cls)], "conf": float(b.conf), "box": b.xyxy[0].tolist()}
+    dets = [{"cls": model.names[int(b.cls)], "conf": float(b.conf), "bbox": b.xyxy[0].tolist()}
             for b in r.boxes]
     return annotated_path, dets
