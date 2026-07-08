@@ -19,7 +19,6 @@ export interface DeviceState {
   livingRoomLight: { power: boolean; brightness: number };
   bedroomLight: { power: boolean; brightness: number };
   kitchenLight: { power: boolean; brightness: number };
-  ac: { power: boolean; temperature: number };
   fan: { power: boolean; autoMode: boolean };
   door: { locked: boolean; open: boolean };
   window: { open: boolean };

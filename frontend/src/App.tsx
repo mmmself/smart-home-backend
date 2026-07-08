@@ -45,7 +45,6 @@ export default function App() {
     livingRoomLight: { power: false, brightness: 50 },
     bedroomLight: { power: false, brightness: 50 },
     kitchenLight: { power: false, brightness: 50 },
-    ac: { power: false, temperature: 26 },
     fan: { power: false, autoMode: true },
     door: { locked: true, open: false },
     window: { open: false },
@@ -97,7 +96,6 @@ export default function App() {
         livingRoomLight: { power: false, brightness: 50 },
         bedroomLight: { power: false, brightness: 50 },
         kitchenLight: { power: false, brightness: 50 },
-        ac: { power: false, temperature: 26 },
         fan: { power: false, autoMode: true },
         door: { locked: true, open: false },
         window: { open: false },
@@ -108,11 +106,6 @@ export default function App() {
           deviceState.livingRoomLight = {
             power: d.state?.on ?? false,
             brightness: d.state?.brightness ?? 50,
-          };
-        } else if (d.type === "ac") {
-          deviceState.ac = {
-            power: d.state?.on ?? false,
-            temperature: d.state?.temp_set ?? 26,
           };
         } else if (d.type === "fan") {
           deviceState.fan = {
@@ -155,7 +148,6 @@ export default function App() {
       livingRoomLight: 'light01',
       bedroomLight: 'light02',
       kitchenLight: 'light03',
-      ac: 'ac01',
       fan: 'fan01',
       door: 'door01',
       window: 'window01',

@@ -33,7 +33,6 @@ try:
 
     devices = [
         Device(device_id="light01", name="客厅灯(逻辑)", type="light", state={"on": True, "brightness": 80, "logical": True, "note": "无物理灯,仅逻辑演示"}),
-        Device(device_id="ac01", name="客厅空调", type="ac", state={"on": False, "temp_set": 26}),
         Device(device_id="fan01", name="风扇", type="fan", state={"on": False, "auto": False}),
         Device(device_id="door01", name="大门", type="door", state={"open": False}),
         Device(device_id="window01", name="窗户(无硬件)", type="window", state={"open": False, "logical": True, "note": "无门窗磁,仅逻辑态"}),
@@ -55,16 +54,15 @@ try:
         OpLog(action="door_open", target="door01", operator="李四", detail={"score": 0.88}, ts=now - timedelta(hours=5)),
         OpLog(action="door_deny", target="door01", operator="face_recognition", detail={"score": 0.21}, ts=now - timedelta(hours=3)),
         OpLog(action="light_on", target="light01", operator="system", detail={"brightness": 80}, ts=now - timedelta(hours=8)),
-        OpLog(action="scene_away", target="scene", operator="system", detail={"changed": ["light01", "ac01"]}, ts=now - timedelta(hours=10)),
+        OpLog(action="scene_away", target="scene", operator="system", detail={"changed": ["light01", "fan01"]}, ts=now - timedelta(hours=10)),
         OpLog(action="fan_auto_on", target="fan01", operator="system", detail={"temperature": 31.2}, ts=now - timedelta(hours=6)),
         OpLog(action="light_on", target="light01", operator="api", detail={"brightness": 50}, ts=now - timedelta(hours=12)),
-        OpLog(action="ac_on", target="ac01", operator="api", detail={"temp_set": 24}, ts=now - timedelta(hours=15)),
     ]
     for i in range(12):
-        actions = ["light_on", "light_off", "ac_on", "ac_off", "door_open", "door_close", "scene_home"]
+        actions = ["light_on", "light_off", "door_open", "door_close", "scene_home"]
         db.add(OpLog(
             action=random.choice(actions),
-            target=random.choice(["light01", "ac01", "door01"]),
+            target=random.choice(["light01", "fan01", "door01"]),
             operator=random.choice(["张三", "system", "api"]),
             detail={},
             ts=now - timedelta(hours=random.randint(1, 23)),

@@ -44,7 +44,6 @@ export interface DeviceState {
   livingRoomLight?: { power: boolean; brightness: number };
   bedroomLight?: { power: boolean; brightness: number };
   kitchenLight?: { power: boolean; brightness: number };
-  ac?: { power: boolean; temperature: number };
   fan?: { power: boolean; autoMode: boolean };
   door?: { locked: boolean; open: boolean };
   window?: { open: boolean };
@@ -63,11 +62,6 @@ function convertDevices(devices: any[]): DeviceState {
       state[key] = {
         power: d.state?.power ?? d.state?.on ?? false,
         brightness: d.state?.brightness ?? 50,
-      };
-    } else if (d.type === 'ac') {
-      state.ac = {
-        power: d.state?.power ?? d.state?.on ?? false,
-        temperature: d.state?.temperature ?? 26,
       };
     } else if (d.type === 'fan') {
       state.fan = {
@@ -120,14 +114,12 @@ export async function setScene(sceneName: string): Promise<{ success: boolean; e
   const scenes: Record<string, Record<string, any>> = {
     home: {
       livingRoomLight: { power: true, brightness: 80 },
-      ac: { power: true },
       door: { locked: false },
     },
     away: {
       livingRoomLight: { power: false },
       bedroomLight: { power: false },
       kitchenLight: { power: false },
-      ac: { power: false },
       fan: { power: false },
       door: { locked: true },
     },
@@ -135,7 +127,6 @@ export async function setScene(sceneName: string): Promise<{ success: boolean; e
       livingRoomLight: { power: false },
       bedroomLight: { power: true, brightness: 10 },
       kitchenLight: { power: false },
-      ac: { power: true, temperature: 26 },
       door: { locked: true },
     },
   };
@@ -149,7 +140,6 @@ export async function setScene(sceneName: string): Promise<{ success: boolean; e
     livingRoomLight: 'light01',
     bedroomLight: 'light02',
     kitchenLight: 'light03',
-    ac: 'ac01',
     fan: 'fan01',
     door: 'door01',
   };

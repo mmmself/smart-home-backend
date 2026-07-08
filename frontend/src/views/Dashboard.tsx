@@ -4,7 +4,6 @@ import {
   Droplets,
   Lightbulb,
   Fan,
-  Wind,
   Compass,
   CheckCircle,
   AlertTriangle,
@@ -39,7 +38,6 @@ const defaultDevices: DeviceState = {
   livingRoomLight: { power: false, brightness: 50 },
   bedroomLight: { power: false, brightness: 50 },
   kitchenLight: { power: false, brightness: 50 },
-  ac: { power: false, temperature: 26 },
   fan: { power: false, autoMode: true },
   door: { locked: true, open: false },
   window: { open: false },
@@ -66,12 +64,7 @@ export default function Dashboard({
       localDevices.kitchenLight.power !== syncedState.kitchenLight.power ||
       localDevices.livingRoomLight.brightness !== syncedState.livingRoomLight.brightness ||
       localDevices.bedroomLight.brightness !== syncedState.bedroomLight.brightness ||
-      localDevices.kitchenLight.brightness !== syncedState.kitchenLight.brightness ||
-      localDevices.ac.power !== syncedState.ac.power ||
-      localDevices.ac.temperature !== syncedState.ac.temperature ||
-      localDevices.fan.power !== syncedState.fan.power ||
-      localDevices.fan.autoMode !== syncedState.fan.autoMode ||
-      localDevices.door.locked !== syncedState.door.locked
+      localDevices.kitchenLight.brightness !== syncedState.kitchenLight.brightness
     ) {
       setLocalDevices(syncedState);
     }
@@ -148,21 +141,6 @@ export default function Dashboard({
   ) => {
     setLocalDevices(prev => prev ? { ...prev, [id]: { ...prev[id], brightness: val } } : { ...defaultDevices, [id]: { ...defaultDevices[id], brightness: val } });
     onDeviceCommand(id, { brightness: val });
-  };
-
-  const handleToggleAc = () => {
-    const nextPower = !safeDevices.ac.power;
-    setLocalDevices(prev => prev ? { ...prev, ac: { ...prev.ac, power: nextPower } } : { ...defaultDevices, ac: { ...defaultDevices.ac, power: nextPower } });
-    onDeviceCommand("ac", { power: nextPower });
-    toast(`空调已${nextPower ? "开启" : "关闭"}`, "success");
-  };
-
-  const handleAcTemp = (change: number) => {
-    const nextTemp = safeDevices.ac.temperature + change;
-    if (nextTemp >= 16 && nextTemp <= 30) {
-      setLocalDevices(prev => prev ? { ...prev, ac: { ...prev.ac, temperature: nextTemp } } : { ...defaultDevices, ac: { ...defaultDevices.ac, temperature: nextTemp } });
-      onDeviceCommand("ac", { temperature: nextTemp });
-    }
   };
 
   const handleToggleFan = () => {
@@ -392,46 +370,6 @@ export default function Dashboard({
             </div>
           </div>
 
-          {/* AC Controls */}
-          <div className="border-t border-gray-100 pt-4 space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-600 flex items-center gap-1.5">
-                <Wind className={`w-4 h-4 ${safeDevices.ac.power ? "text-indigo-500 animate-pulse" : "text-gray-300"}`} />
-                智能冷暖空调
-              </span>
-              <button
-                onClick={handleToggleAc}
-                className={`w-9 h-5 rounded-full p-0.5 transition duration-200 focus:outline-none ${
-                  safeDevices.ac.power ? "bg-indigo-600" : "bg-gray-300"
-                }`}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white transition duration-200 transform ${
-                  safeDevices.ac.power ? "translate-x-4" : ""
-                }`} />
-              </button>
-            </div>
-            {safeDevices.ac.power && (
-              <div className="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                <button
-                  onClick={() => handleAcTemp(-1)}
-                  className="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 transition text-sm font-semibold"
-                >
-                  -
-                </button>
-                <div className="text-center">
-                  <div className="text-xs text-gray-500">设定温度</div>
-                  <div className="text-sm font-mono font-semibold text-gray-700">{safeDevices.ac.temperature} °C</div>
-                </div>
-                <button
-                  onClick={() => handleAcTemp(1)}
-                  className="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 transition text-sm font-semibold"
-                >
-                  +
-                </button>
-              </div>
-            )}
-          </div>
-
           {/* Fan Controls */}
           <div className="border-t border-gray-100 pt-4 space-y-3">
             <div className="flex items-center justify-between text-xs">
@@ -583,17 +521,6 @@ export default function Dashboard({
                   点击切换
                 </text>
               </g>
-
-              {/* AC Cooling wind effect */}
-              {safeDevices.ac.power && (
-                <g transform="translate(320, 140)">
-                  <path d="M10,0 Q30,10 50,0 T90,0" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeOpacity="0.6" style={{ animation: "pulse 1.5s ease-in-out infinite" }} />
-                  <path d="M10,12 Q30,22 50,12 T90,12" fill="none" stroke="#818cf8" strokeWidth="1.5" strokeOpacity="0.4" style={{ animation: "pulse 1.5s ease-in-out infinite" }} />
-                  <text x="50" y="-10" textAnchor="middle" fill="#6366f1" fontSize="9" fontWeight="600">
-                    AC {safeDevices.ac.temperature}°C
-                  </text>
-                </g>
-              )}
 
               {/* Fan Spinning animation indicator */}
               {safeDevices.fan.power && (

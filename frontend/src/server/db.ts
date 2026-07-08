@@ -21,7 +21,6 @@ export interface DeviceState {
   livingRoomLight: { power: boolean; brightness: number };
   bedroomLight: { power: boolean; brightness: number };
   kitchenLight: { power: boolean; brightness: number };
-  ac: { power: boolean; temperature: number };
   fan: { power: boolean; autoMode: boolean };
   door: { locked: boolean; open: boolean };
   window: { open: boolean };
@@ -76,7 +75,6 @@ let db: DatabaseSchema = {
     livingRoomLight: { power: true, brightness: 80 },
     bedroomLight: { power: false, brightness: 50 },
     kitchenLight: { power: false, brightness: 60 },
-    ac: { power: true, temperature: 24 },
     fan: { power: false, autoMode: true },
     door: { locked: true, open: false },
     window: { open: false },
@@ -117,7 +115,7 @@ function generateDefaultLogs(): SystemLog[] {
       action: "scene_change",
       target: "Home Scene",
       operator: "Alice (Owner)",
-      details: JSON.stringify({ previousScene: "away", currentScene: "home", triggeredDevices: ["livingRoomLight", "ac"] }),
+      details: JSON.stringify({ previousScene: "away", currentScene: "home", triggeredDevices: ["livingRoomLight"] }),
     },
     {
       id: "log_2",
@@ -325,9 +323,6 @@ export function updateDeviceCommand(deviceId: string, command: any) {
   if (deviceId === "livingRoomLight" || deviceId === "bedroomLight" || deviceId === "kitchenLight") {
     if (command.power !== undefined) d[deviceId].power = command.power;
     if (command.brightness !== undefined) d[deviceId].brightness = command.brightness;
-  } else if (deviceId === "ac") {
-    if (command.power !== undefined) d.ac.power = command.power;
-    if (command.temperature !== undefined) d.ac.temperature = command.temperature;
   } else if (deviceId === "fan") {
     if (command.power !== undefined) d.fan.power = command.power;
     if (command.autoMode !== undefined) d.fan.autoMode = command.autoMode;
@@ -355,13 +350,11 @@ export function setScene(sceneName: "home" | "away" | "sleep") {
   // Automate actions based on scene
   if (sceneName === "home") {
     db.devices.livingRoomLight.power = true;
-    db.devices.ac.power = true;
     db.devices.door.locked = false;
   } else if (sceneName === "away") {
     db.devices.livingRoomLight.power = false;
     db.devices.bedroomLight.power = false;
     db.devices.kitchenLight.power = false;
-    db.devices.ac.power = false;
     db.devices.fan.power = false;
     db.devices.door.locked = true;
     db.devices.door.open = false;
@@ -370,7 +363,6 @@ export function setScene(sceneName: "home" | "away" | "sleep") {
     db.devices.bedroomLight.power = true;
     db.devices.bedroomLight.brightness = 10;
     db.devices.kitchenLight.power = false;
-    db.devices.ac.temperature = 26;
     db.devices.door.locked = true;
   }
 
