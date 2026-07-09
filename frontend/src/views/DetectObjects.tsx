@@ -9,9 +9,11 @@ import {
   ChevronRight,
   Lightbulb,
   CheckCircle,
+  Camera,
 } from "lucide-react";
 import { Detection } from "../types";
 import * as api from "../api";
+import CameraCapture from "../components/CameraCapture";
 
 interface DetectObjectsProps {
   toast: (msg: string, type: "success" | "error" | "info") => void;
@@ -25,6 +27,7 @@ export default function DetectObjects({ toast, onOpenLightbox, refreshDevices }:
   const [activeDetection, setActiveDetection] = useState<Detection | null>(null);
   const [historyDetections, setHistoryDetections] = useState<Detection[]>([]);
   const [isLinkageEnabled, setIsLinkageEnabled] = useState(true);
+  const [showCamera, setShowCamera] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -158,6 +161,43 @@ export default function DetectObjects({ toast, onOpenLightbox, refreshDevices }:
     setQueryImage(det.originalImage);
     setActiveDetection(det);
     toast("已加载历史识别数据", "success");
+  };
+
+  // Camera capture handler - auto-detect after capture
+  const handleCameraCapture = async (dataUrl: string) => {
+    setShowCamera(false);
+    setQueryImage(dataUrl);
+    setActiveDetection(null);
+
+    setIsInferring(true);
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+
+    const json = await api.detectObjects(file, isLinkageEnabled);
+    if (json.success && json.data) {
+      setActiveDetection({
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        originalImage: dataUrl,
+        annotatedImage: json.data.annotated_url || dataUrl,
+        results: (json.data.detections || []).map((d: any) => ({
+          category: d.cls,
+          category_zh: d.cls,
+          confidence: d.conf,
+          bbox: d.bbox,
+        })),
+      } as any);
+      toast(`拍照识别完成：检出 ${(json.data.detections || []).length} 个特征目标！`, "success");
+      if (json.data.linkageTriggered) {
+        toast("智能联动触发：客厅主灯已调至 100% 亮度！", "success");
+        refreshDevices();
+      }
+      fetchDetections();
+    } else {
+      toast("识别失败: " + json.error, "error");
+    }
+    setIsInferring(false);
   };
 
   // Bounding box colors generator helper
@@ -347,6 +387,19 @@ export default function DetectObjects({ toast, onOpenLightbox, refreshDevices }:
               </div>
             )}
 
+            {/* Camera capture button */}
+            {!queryImage && !isInferring && (
+              <div className="mt-5">
+                <button
+                  onClick={() => setShowCamera(true)}
+                  className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition shadow-sm"
+                >
+                  <Camera className="w-4 h-4" />
+                  拍照识别
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -493,6 +546,13 @@ export default function DetectObjects({ toast, onOpenLightbox, refreshDevices }:
         </div>
       </div>
 
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+          title="拍照识别"
+        />
+      )}
     </div>
   );
 }

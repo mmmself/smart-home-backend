@@ -10,4 +10,5 @@ runs/
 .venv/
 node_modules/
 frontend/dist/
+frontend/certs/
 models/insightface/

@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from .database import engine, Base
 from . import models
-from .routers import persons, detect, face, devices, logs, scene, sensors, access
+from .routers import persons, detect, face, devices, logs, scene, sensors, access, camera
 from .config import CORS_ORIGINS, API_KEY
 import os
 import logging
@@ -48,7 +48,17 @@ async def lifespan(app: FastAPI):
         logger.info("InsightFace模型预热完成")
     except Exception as e:
         logger.warning(f"InsightFace模型预热失败: {e}")
+    try:
+        from .services.camera_service import init_camera
+        init_camera()
+    except Exception as e:
+        logger.warning(f"摄像头初始化失败: {e}")
     yield
+    try:
+        from .services.camera_service import release_camera
+        release_camera()
+    except Exception:
+        pass
 
 
 app = FastAPI(title="Smart Home Backend", lifespan=lifespan)
@@ -73,6 +83,7 @@ app.include_router(logs.router, dependencies=[Depends(verify_api_key)])
 app.include_router(scene.router, dependencies=[Depends(verify_api_key)])
 app.include_router(sensors.router, dependencies=[Depends(verify_api_key)])
 app.include_router(access.router, dependencies=[Depends(verify_api_key)])
+app.include_router(camera.router)
 
 
 @app.get("/")
