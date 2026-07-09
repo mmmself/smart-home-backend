@@ -119,7 +119,9 @@ def verify(
         db.commit()
         apply_device_state(db, "door01", {"open": True},
                            action="door_open", operator=matched_person.name)
-        apply_device_state(db, "display01", {"text": f"Welcome {matched_person.name}"},
+        ascii_name = matched_person.name.encode("ascii", errors="ignore").strip()
+        oled_text = f"Welcome {ascii_name}" if ascii_name else f"Welcome ID:{matched_person.id}"
+        apply_device_state(db, "display01", {"text": oled_text},
                            action="oled", operator="system")
         return resp({
             "pass": True,

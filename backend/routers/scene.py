@@ -7,7 +7,7 @@ from ..schemas import resp
 router = APIRouter(prefix="/api")
 
 SCENES = {
-    "away": [("light01", {"on": False}), ("ac01", {"on": False}), ("door01", {"locked": True})],
+    "away": [("light01", {"on": False}), ("ac01", {"on": False}), ("door01", {"open": False})],
     "home": [("light01", {"on": True}), ("ac01", {"on": True, "temp_set": 26})],
     "night": [("light01", {"on": True, "brightness": 10}), ("window01", {"open": False})],
 }
