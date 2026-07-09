@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Person, FaceRecord } from "../types";
 import EmptyState from "../components/EmptyState";
+import CameraCapture from "../components/CameraCapture";
 import * as api from "../api";
 
 interface FaceAccessProps {
@@ -54,6 +55,8 @@ export default function FaceAccess({ toast, onOpenLightbox }: FaceAccessProps) {
   const [enrollImage, setEnrollImage] = useState<string | null>(null);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [isLockControlling, setIsLockControlling] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const [showEnrollCamera, setShowEnrollCamera] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const enrollFileInputRef = useRef<HTMLInputElement>(null);
@@ -303,6 +306,52 @@ export default function FaceAccess({ toast, onOpenLightbox }: FaceAccessProps) {
     setIsLockControlling(false);
   };
 
+  // Camera capture for verify - auto-verify after capture
+  const handleCameraCapture = async (dataUrl: string) => {
+    setShowCamera(false);
+    setQueryImage(dataUrl);
+    setVerifyResult(null);
+    setIsVerifying(true);
+
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
+
+    const apiRes = await api.verifyFace(file);
+    if (apiRes.success && apiRes.data) {
+      const result = apiRes.data;
+      setVerifyResult({
+        status: result.pass ? 'pass' : 'reject',
+        name: result.person?.name,
+        confidence: result.score,
+        message: result.pass ? `验证通过：欢迎 ${result.person?.name}！` : '验证失败：未识别该人脸',
+      });
+      const record: VerificationRecord = {
+        timestamp: new Date().toISOString(),
+        image: dataUrl,
+        status: result.pass ? 'pass' : 'reject',
+        name: result.person?.name,
+        confidence: result.score,
+        message: result.pass ? `验证通过：欢迎 ${result.person?.name}！` : '验证失败：未识别该人脸',
+      };
+      setVerifyHistory((prev) => [record, ...prev].slice(0, 5));
+      if (result.pass) {
+        toast(`拍照验证通过：欢迎 ${result.person?.name} 回家！`, "success");
+      } else {
+        toast("拍照验证：未识别该人脸信息！", "error");
+      }
+    } else {
+      toast("验证失败: " + apiRes.error, "error");
+    }
+    setIsVerifying(false);
+  };
+
+  // Camera capture for enroll - just set the image, user still needs to confirm
+  const handleEnrollCameraCapture = (dataUrl: string) => {
+    setShowEnrollCamera(false);
+    setEnrollImage(dataUrl);
+  };
+
   return (
     <div className="space-y-6">
       
@@ -398,6 +447,19 @@ export default function FaceAccess({ toast, onOpenLightbox }: FaceAccessProps) {
                   </div>
                 )}
               </div>
+
+              {/* Camera capture button */}
+              {!queryImage && !isVerifying && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowCamera(true)}
+                    className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition shadow-sm"
+                  >
+                    <Camera className="w-4 h-4" />
+                    拍照验证
+                  </button>
+                </div>
+              )}
 
               {/* Simulation Testing Scenarios */}
               <div className="mt-6 border-t border-gray-100 pt-5">
@@ -844,6 +906,15 @@ export default function FaceAccess({ toast, onOpenLightbox }: FaceAccessProps) {
                     </div>
                   )}
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowEnrollCamera(true)}
+                  className="w-full py-2.5 mt-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition shadow-sm"
+                >
+                  <Camera className="w-4 h-4" />
+                  拍照采集
+                </button>
               </div>
 
               {/* Buttons */}
@@ -879,6 +950,22 @@ export default function FaceAccess({ toast, onOpenLightbox }: FaceAccessProps) {
 
           </div>
         </div>
+      )}
+
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+          title="拍照验证"
+        />
+      )}
+
+      {showEnrollCamera && (
+        <CameraCapture
+          onCapture={handleEnrollCameraCapture}
+          onClose={() => setShowEnrollCamera(false)}
+          title="拍照采集人脸底图"
+        />
       )}
 
     </div>

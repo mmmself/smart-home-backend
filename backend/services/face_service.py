@@ -41,8 +41,8 @@ def _get_app():
     if _app is None:
         from insightface.app import FaceAnalysis
         import os
-        root = INSIGHTFACE_ROOT if os.path.isdir(INSIGHTFACE_ROOT) else None
-        _app = FaceAnalysis(name=INSIGHTFACE_NAME, root=root, providers=["CPUExecutionProvider"])
+        root = INSIGHTFACE_ROOT if INSIGHTFACE_ROOT and os.path.isdir(INSIGHTFACE_ROOT) else ""
+        _app = FaceAnalysis(name=INSIGHTFACE_NAME, root=root or None, providers=["CPUExecutionProvider"])
         _app.prepare(ctx_id=-1, det_size=(640, 640))
     return _app
 

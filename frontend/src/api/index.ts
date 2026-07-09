@@ -478,3 +478,18 @@ export async function healthCheck(): Promise<{ success: boolean; error?: string 
   const res = await apiRequest('/health');
   return { success: res.code === 0, error: res.msg };
 }
+
+// ==================== Camera API ====================
+
+export async function captureFromBackend(): Promise<{ success: boolean; data?: string; error?: string }> {
+  try {
+    const response = await fetch('/api/camera/capture', { method: 'POST' });
+    const data = await response.json();
+    if (data.code === 0 && data.data?.image) {
+      return { success: true, data: data.data.image };
+    }
+    return { success: false, error: data.msg || '拍照失败' };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
