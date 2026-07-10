@@ -4,7 +4,7 @@
 
 ## 技术栈
 
-- Python 3.10+ / FastAPI / Uvicorn
+- Python / FastAPI / Uvicorn
 - MySQL 8.0 + SQLAlchemy 2.x
 - YOLOv8n (ultralytics) 目标检测
 - InsightFace 人脸识别
